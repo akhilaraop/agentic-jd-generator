@@ -38,7 +38,10 @@ namespace JobDescriptionAgent.Services
 
             var response = await _httpClient.SendAsync(request);
 
-
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+            }
 
             var json = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(json);

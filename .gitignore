@@ -67,4 +67,7 @@ appsettings.json
 *.sln.ide
 *.sln.docstates
 obj/
+
+.vscode/
 bin/
+
