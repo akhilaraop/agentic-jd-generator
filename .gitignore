@@ -7,7 +7,13 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
+# Ignore build artifacts
+obj/Debug/
+obj/Release/
+bin/Debug/
+
 # Build results
+
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -54,4 +60,11 @@ TestResult.xml
 nunit-*.xml
 
 appsettings.json
+
+*.user
+*.suo
+*.userosscache
+*.sln.ide
+*.sln.docstates
 obj/
+bin/
