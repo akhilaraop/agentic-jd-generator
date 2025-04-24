@@ -3,11 +3,11 @@ namespace JobDescriptionAgent.Services
 {
     public class AgenticWorkflowService
     {
-        private readonly LanguageModelService _llama;
+        private readonly LanguageModelService _languagemodel;
 
         public AgenticWorkflowService(LanguageModelService LanguageModelService)
         {
-            _llama = LanguageModelService;
+            _languagemodel = LanguageModelService;
         }
 
         public async Task<(string JobDescription, string ComplianceReview)> RunAgenticWorkflowAsync(string initialInput)
@@ -23,7 +23,7 @@ namespace JobDescriptionAgent.Services
 
             If everything needed for a job description is provided (role, level, location, skills, responsibilities, etc.), respond with: 'No clarifications needed.'";
 
-            var clarify = await _llama.AskAsync(clarifierPrompt, initialInput);
+            var clarify = await _languagemodel.AskAsync(clarifierPrompt, initialInput);
 
             /* if (!clarify.Trim().ToLower().StartsWith("no clarifications needed"))
             {
@@ -35,14 +35,14 @@ namespace JobDescriptionAgent.Services
             You are a JD Generator Agent. Use the user's input to write a professional job description.
             Structure it with: About Us, Role, Responsibilities, Requirements, Perks.";
 
-            var generate = await _llama.AskAsync(generatePrompt, initialInput);
+            var generate = await _languagemodel.AskAsync(generatePrompt, initialInput);
 
             // STEP 2: Critique
             var critiquePrompt = @"
             You are a Critique Agent. Review and revise the job description for tone, clarity, and formatting.
             Ensure it's inclusive, modern, and professionally written.";
 
-            var critique = await _llama.AskAsync(critiquePrompt, generate);
+            var critique = await _languagemodel.AskAsync(critiquePrompt, generate);
 
             // ⚖️ STEP 3: Compliance Check
             var compliancePrompt = @"
@@ -55,7 +55,7 @@ namespace JobDescriptionAgent.Services
 
             Respond with a bullet-point summary of any issues found and how to improve them.";
 
-            var complianceReview = await _llama.AskAsync(compliancePrompt, critique);
+            var complianceReview = await _languagemodel.AskAsync(compliancePrompt, critique);
 
 
             // 🔁 STEP 4: Rewrite with Feedback
@@ -84,7 +84,7 @@ namespace JobDescriptionAgent.Services
             {complianceReview}
             ";
 
-            var improvedJD = await _llama.AskAsync(rewriterPrompt, rewriterInput);
+            var improvedJD = await _languagemodel.AskAsync(rewriterPrompt, rewriterInput);
 
             return (improvedJD, complianceReview);
         }

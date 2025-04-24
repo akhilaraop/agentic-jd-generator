@@ -10,4 +10,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
   </ItemGroup>
 
+  <PropertyGroup>
+  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  <NoWarn>1591</NoWarn> <!-- Optional: suppresses warnings for missing docs -->
+</PropertyGroup>
+
+
 </Project>

@@ -1,9 +1,10 @@
 using JobDescriptionAgent.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using JobDescriptionAgent.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure strongly typed settings
+builder.Services.Configure<AppSettings>(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddSingleton<LanguageModelService>();

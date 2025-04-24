@@ -1,22 +1,23 @@
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using JobDescriptionAgent.Models;
+
 
 namespace JobDescriptionAgent.Services
 {
     public class LanguageModelService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
+        private readonly GroqApiSettings _apiSettings;
 
-        public LanguageModelService(IConfiguration config)
+        public LanguageModelService(IOptions<AppSettings> options)
         {
             _httpClient = new HttpClient();
-            _apiKey =
-                config["GROQ_API_KEY"]
-                ?? throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");
+            _apiSettings = options.Value.GroqApi ?? throw new InvalidOperationException("GroqApi settings are missing in configuration.");
+            
+            if (string.IsNullOrEmpty(_apiSettings.ApiKey))
+                throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");
         }
 
         public async Task<string> AskAsync(string prompt, string userInput)
@@ -25,16 +26,13 @@ namespace JobDescriptionAgent.Services
 
             var requestBody = new
             {
-                model = "llama3-8b-8192",
+                model = _apiSettings.Model,
                 messages = new[] { new { role = "user", content = fullPrompt } },
             };
 
-            var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                "https://api.groq.com/openai/v1/chat/completions"
-            )
+            var request = new HttpRequestMessage(HttpMethod.Post, _apiSettings.BaseUrl)
             {
-                Headers = { { "Authorization", $"Bearer {_apiKey}" } },
+                Headers = { { "Authorization", $"Bearer {_apiSettings.ApiKey}" } },
                 Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
             };
 

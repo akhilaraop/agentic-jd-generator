@@ -1,7 +1,5 @@
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using System.Threading.Tasks;
 using JobDescriptionAgent.Services;
 using JobDescriptionAgent.Models;
 
