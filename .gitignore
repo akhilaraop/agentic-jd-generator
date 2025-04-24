@@ -69,3 +69,4 @@ obj/
 .vscode/
 bin/
 
+streamlit_ui_prompt.txt

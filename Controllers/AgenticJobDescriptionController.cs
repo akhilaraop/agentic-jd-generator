@@ -25,22 +25,8 @@ namespace JobDescriptionAgent.Controllers
                 return BadRequest("Initial input is required");
             }
 
-            var (jd, complianceReview) = await _orchestrator.RunAsync(request.InitialInput);
-
-            if (jd.StartsWith("Clarifier Agent needs more information"))
-            {
-                return Ok(new JDResponse
-                {
-                    FinalJobDescription = jd,
-                    ComplianceReview = ""
-                });
-            }
-
-            return Ok(new JDResponse
-            {
-                FinalJobDescription = jd,
-                ComplianceReview = complianceReview
-            });
+            var response = await _orchestrator.RunAsync(request.InitialInput);
+            return Ok(response);
         }
     }
 }

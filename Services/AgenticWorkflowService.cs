@@ -96,37 +96,37 @@ namespace JobDescriptionAgent.Services
             _rewriter = new RewriterAgent(LanguageModelService, config);
         }
 
-        public async Task<(string finalJD, string complianceNotes)> RunAsync(string userInput)
+        public async Task<JDResponse> RunAsync(string userInput)
         {
+            var response = new JDResponse();
+            
             var clarify = await _clarifier.ExecuteAsync(userInput);
             
             // Check if clarification is needed
             if (clarify.Trim().StartsWith("Need clarification"))
             {
-                return ($"Clarifier Agent needs more information:\n\n{clarify}", "");
+                response.FinalJobDescription = $"Clarifier Agent needs more information:\n\n{clarify}";
+                return response;
             }
 
             // Extract assumptions if any
-            string assumptions = "";
             if (clarify.Contains("Making the following assumptions:"))
             {
-                assumptions = "\nAssumptions made:\n" + clarify.Split("Making the following assumptions:")[1].Trim();
+                response.Assumptions = clarify.Split("Making the following assumptions:")[1].Trim();
             }
 
-            // Proceed with generation using original input
-            var jdDraft = await _generator.ExecuteAsync(userInput);
-            var critique = await _critic.ExecuteAsync(jdDraft);
-            var compliance = await _compliance.ExecuteAsync(critique);
+            // Generate all components
+            response.InitialDraft = await _generator.ExecuteAsync(userInput);
+            response.CritiqueFeedback = await _critic.ExecuteAsync(response.InitialDraft);
+            response.ComplianceReview = await _compliance.ExecuteAsync(response.CritiqueFeedback);
 
-            var combinedFeedback = $"Original JD:\n{jdDraft}\n\nCritique Feedback:\n{critique}\n\nCompliance Feedback:\n{compliance}";
-            var rewritten = await _rewriter.ExecuteAsync(combinedFeedback);
+            response.CombinedFeedback = $"Original JD:\n{response.InitialDraft}\n\n" +
+                                      $"Critique Feedback:\n{response.CritiqueFeedback}\n\n" +
+                                      $"Compliance Feedback:\n{response.ComplianceReview}";
 
-            // Add assumptions to the compliance notes if any were made
-            var finalComplianceNotes = string.IsNullOrEmpty(assumptions) 
-                ? compliance 
-                : compliance + "\n" + assumptions;
+            response.FinalJobDescription = await _rewriter.ExecuteAsync(response.CombinedFeedback);
 
-            return (rewritten, finalComplianceNotes);
+            return response;
         }
     }
 }
