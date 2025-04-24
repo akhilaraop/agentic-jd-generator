@@ -39,7 +39,7 @@ namespace JobDescriptionAgent.Services
         public ClarifierAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Clarifier") { }
         public override string Name => "ClarifierAgent";
         public override string Role => "Clarifier";
-        public override string Goal => "Clarify vague inputs before JD generation";
+        public override string Goal => "Clarify vague inputs and make reasonable assumptions";
         public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
     }
 
@@ -99,9 +99,21 @@ namespace JobDescriptionAgent.Services
         public async Task<(string finalJD, string complianceNotes)> RunAsync(string userInput)
         {
             var clarify = await _clarifier.ExecuteAsync(userInput);
-            if (!clarify.Trim().ToLower().StartsWith("no clarifications needed"))
+            
+            // Check if clarification is needed
+            if (clarify.Trim().StartsWith("Need clarification"))
+            {
                 return ($"Clarifier Agent needs more information:\n\n{clarify}", "");
+            }
 
+            // Extract assumptions if any
+            string assumptions = "";
+            if (clarify.Contains("Making the following assumptions:"))
+            {
+                assumptions = "\nAssumptions made:\n" + clarify.Split("Making the following assumptions:")[1].Trim();
+            }
+
+            // Proceed with generation using original input
             var jdDraft = await _generator.ExecuteAsync(userInput);
             var critique = await _critic.ExecuteAsync(jdDraft);
             var compliance = await _compliance.ExecuteAsync(critique);
@@ -109,7 +121,12 @@ namespace JobDescriptionAgent.Services
             var combinedFeedback = $"Original JD:\n{jdDraft}\n\nCritique Feedback:\n{critique}\n\nCompliance Feedback:\n{compliance}";
             var rewritten = await _rewriter.ExecuteAsync(combinedFeedback);
 
-            return (rewritten, compliance);
+            // Add assumptions to the compliance notes if any were made
+            var finalComplianceNotes = string.IsNullOrEmpty(assumptions) 
+                ? compliance 
+                : compliance + "\n" + assumptions;
+
+            return (rewritten, finalComplianceNotes);
         }
     }
 }
