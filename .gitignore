@@ -70,3 +70,38 @@ obj/
 bin/
 
 streamlit_ui_prompt.txt
+
+# Client-side libraries
+wwwroot/lib/
+wwwroot/lib/**/
+!wwwroot/lib/README.md
+
+# Development settings
+appsettings.Development.json
+
+# User Secrets
+*.Development.json
+secrets.json
+
+# IDE - Visual Studio
+.vs/
+*.vspscc
+*.vssscc
+.builds
+
+# Rider
+.idea/
+*.sln.iml
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.swp
+*.swo
+*.*~
+project.lock.json
+.project
+.DS_Store

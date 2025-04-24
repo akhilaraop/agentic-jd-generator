@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using JobDescriptionAgent.Services;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace JobDescriptionAgent.Pages
 {
@@ -12,6 +13,7 @@ namespace JobDescriptionAgent.Pages
         private readonly ILogger<IndexModel> _logger;
         
         [BindProperty]
+        [Required(ErrorMessage = "Please provide job requirements.")]
         public string? JobDescription { get; set; }
         
         public string? GeneratedDescription { get; set; }
@@ -30,14 +32,27 @@ namespace JobDescriptionAgent.Pages
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid || string.IsNullOrEmpty(JobDescription))
+            if (!ModelState.IsValid)
             {
                 return Page();
             }
 
             try
             {
+                if (string.IsNullOrWhiteSpace(JobDescription))
+                {
+                    ModelState.AddModelError(string.Empty, "Please provide job requirements.");
+                    return Page();
+                }
+
                 var (description, stages) = await _workflowService.RunAsync(JobDescription);
+                
+                if (string.IsNullOrEmpty(description))
+                {
+                    ErrorMessage = "Failed to generate job description. Please try again with more specific requirements.";
+                    return Page();
+                }
+
                 GeneratedDescription = description;
                 Stages = stages;
             }

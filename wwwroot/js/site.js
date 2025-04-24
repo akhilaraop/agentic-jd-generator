@@ -43,15 +43,4 @@ function copyToClipboard(text) {
     }).catch(function(err) {
         console.error('Failed to copy text: ', err);
     });
-}
-
-// Form validation
-function validateForm() {
-    const input = document.querySelector('#InitialInput');
-    if (!input.value.trim()) {
-        input.classList.add('is-invalid');
-        return false;
-    }
-    input.classList.remove('is-invalid');
-    return true;
 } 
