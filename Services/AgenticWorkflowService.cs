@@ -1,92 +1,115 @@
+// Updated to load agent prompts from configuration (appsettings.json)
+
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using JobDescriptionAgent.Models;
 
 namespace JobDescriptionAgent.Services
 {
-    public class AgenticWorkflowService
+    public interface IAgent
     {
-        private readonly LanguageModelService _languagemodel;
+        string Name { get; }
+        string Role { get; }
+        string Goal { get; }
+        Task<string> ExecuteAsync(string input);
+    }
 
-        public AgenticWorkflowService(LanguageModelService LanguageModelService)
+    public abstract class AgentBase : IAgent
+    {
+        protected readonly LanguageModelService _LanguageModelService;
+        protected readonly string _model;
+        protected readonly string _prompt;
+        protected AgentBase(LanguageModelService LanguageModelService, IConfiguration config, string promptKey)
         {
-            _languagemodel = LanguageModelService;
+            _LanguageModelService = LanguageModelService;
+            _model = config["LLM:Model"] ?? "llama3-8b-8192";
+            _prompt = config[$"Prompts:{promptKey}"] ?? string.Empty;
         }
 
-        public async Task<(string JobDescription, string ComplianceReview)> RunAgenticWorkflowAsync(string initialInput)
+        public abstract string Name { get; }
+        public abstract string Role { get; }
+        public abstract string Goal { get; }
+        public abstract Task<string> ExecuteAsync(string input);
+    }
+
+    public class ClarifierAgent : AgentBase
+    {
+        public ClarifierAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Clarifier") { }
+        public override string Name => "ClarifierAgent";
+        public override string Role => "Clarifier";
+        public override string Goal => "Clarify vague inputs before JD generation";
+        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
+    }
+
+    public class GeneratorAgent : AgentBase
+    {
+        public GeneratorAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Generator") { }
+        public override string Name => "GeneratorAgent";
+        public override string Role => "Generator";
+        public override string Goal => "Generate the initial job description";
+        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
+    }
+
+    public class CritiqueAgent : AgentBase
+    {
+        public CritiqueAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Critique") { }
+        public override string Name => "CritiqueAgent";
+        public override string Role => "Critic";
+        public override string Goal => "Polish the tone, formatting, and inclusiveness";
+        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
+    }
+
+    public class ComplianceAgent : AgentBase
+    {
+        public ComplianceAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Compliance") { }
+        public override string Name => "ComplianceAgent";
+        public override string Role => "Compliance Reviewer";
+        public override string Goal => "Check for bias, EEOC compliance, vague requirements";
+        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
+    }
+
+    public class RewriterAgent : AgentBase
+    {
+        public RewriterAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Rewriter") { }
+        public override string Name => "RewriterAgent";
+        public override string Role => "Improver";
+        public override string Goal => "Rewrite the JD using feedback from critique and compliance";
+        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
+    }
+
+    public class JDOrchestrator
+    {
+        private readonly ClarifierAgent _clarifier;
+        private readonly GeneratorAgent _generator;
+        private readonly CritiqueAgent _critic;
+        private readonly ComplianceAgent _compliance;
+        private readonly RewriterAgent _rewriter;
+
+        public JDOrchestrator(LanguageModelService LanguageModelService, IConfiguration config)
         {
-            var clarifierPrompt = @"
-            You are a Clarifier Agent helping to generate job descriptions. 
-            The user may provide vague or incomplete information. 
-            Your job is to ask clarifying questions before any description is written.
+            _clarifier = new ClarifierAgent(LanguageModelService, config);
+            _generator = new GeneratorAgent(LanguageModelService, config);
+            _critic = new CritiqueAgent(LanguageModelService, config);
+            _compliance = new ComplianceAgent(LanguageModelService, config);
+            _rewriter = new RewriterAgent(LanguageModelService, config);
+        }
 
-            Do not attempt to write a job description.  
-            Do not assume missing information.  
-            Only respond with a numbered list of specific questions you would ask the user.
-
-            If everything needed for a job description is provided (role, level, location, skills, responsibilities, etc.), respond with: 'No clarifications needed.'";
-
-            var clarify = await _languagemodel.AskAsync(clarifierPrompt, initialInput);
-
-            /* if (!clarify.Trim().ToLower().StartsWith("no clarifications needed"))
-            {
+        public async Task<(string finalJD, string complianceNotes)> RunAsync(string userInput)
+        {
+            var clarify = await _clarifier.ExecuteAsync(userInput);
+            if (!clarify.Trim().ToLower().StartsWith("no clarifications needed"))
                 return ($"Clarifier Agent needs more information:\n\n{clarify}", "");
-            } */
 
-            // STEP 1: Initial Generation
-            var generatePrompt = @"
-            You are a JD Generator Agent. Use the user's input to write a professional job description.
-            Structure it with: About Us, Role, Responsibilities, Requirements, Perks.";
+            var jdDraft = await _generator.ExecuteAsync(userInput);
+            var critique = await _critic.ExecuteAsync(jdDraft);
+            var compliance = await _compliance.ExecuteAsync(critique);
 
-            var generate = await _languagemodel.AskAsync(generatePrompt, initialInput);
+            var combinedFeedback = $"Original JD:\n{jdDraft}\n\nCritique Feedback:\n{critique}\n\nCompliance Feedback:\n{compliance}";
+            var rewritten = await _rewriter.ExecuteAsync(combinedFeedback);
 
-            // STEP 2: Critique
-            var critiquePrompt = @"
-            You are a Critique Agent. Review and revise the job description for tone, clarity, and formatting.
-            Ensure it's inclusive, modern, and professionally written.";
-
-            var critique = await _languagemodel.AskAsync(critiquePrompt, generate);
-
-            // ⚖️ STEP 3: Compliance Check
-            var compliancePrompt = @"
-            You are a Compliance & Fairness Agent for job descriptions. 
-            Your responsibilities include:
-            - Identifying biased or exclusionary language
-            - Ensuring the JD is inclusive and aligned with EEOC best practices
-            - Suggesting improvements to skill requirements or vague role definitions
-            - Highlighting any missing or under-explained responsibilities
-
-            Respond with a bullet-point summary of any issues found and how to improve them.";
-
-            var complianceReview = await _languagemodel.AskAsync(compliancePrompt, critique);
-
-
-            // 🔁 STEP 4: Rewrite with Feedback
-            var rewriterPrompt = @"
-            You are a JD Rewriter Agent. 
-            You are given a job description along with critique and compliance feedback.
-            Your task is to rewrite the job description incorporating all suggested improvements.
-
-            Maintain a clear structure:
-            - About Us
-            - Role
-            - Responsibilities
-            - Requirements
-            - Perks
-
-            Only return the improved job description.";
-
-            var rewriterInput = $@"
-            Original JD:
-            {generate}
-
-            Critique Feedback:
-            {critique}
-
-            Compliance Feedback:
-            {complianceReview}
-            ";
-
-            var improvedJD = await _languagemodel.AskAsync(rewriterPrompt, rewriterInput);
-
-            return (improvedJD, complianceReview);
+            return (rewritten, compliance);
         }
     }
 }

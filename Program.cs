@@ -8,7 +8,7 @@ builder.Services.Configure<AppSettings>(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddSingleton<LanguageModelService>();
-builder.Services.AddSingleton<AgenticWorkflowService>();
+builder.Services.AddSingleton<JDOrchestrator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -34,6 +34,9 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "JD Agent API v1");
 });
+
+
+
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

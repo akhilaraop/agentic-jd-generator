@@ -20,15 +20,16 @@ namespace JobDescriptionAgent.Services
                 throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");
         }
 
-        public async Task<string> AskAsync(string prompt, string userInput)
-        {
-            var fullPrompt = $"{prompt}\nUser input: {userInput}";
+        // In LanguageModelService.cs
+public async Task<string> AskAsync(string prompt, string userInput, string? modelOverride = null)
+{
+    var fullPrompt = $"{prompt}\nUser input: {userInput}";
 
-            var requestBody = new
-            {
-                model = _apiSettings.Model,
-                messages = new[] { new { role = "user", content = fullPrompt } },
-            };
+    var requestBody = new
+    {
+        model = modelOverride ?? _apiSettings.Model,
+        messages = new[] { new { role = "user", content = fullPrompt } },
+    };
 
             var request = new HttpRequestMessage(HttpMethod.Post, _apiSettings.BaseUrl)
             {

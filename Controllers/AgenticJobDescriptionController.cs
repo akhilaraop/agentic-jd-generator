@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using JobDescriptionAgent.Services;
 using JobDescriptionAgent.Models;
@@ -6,36 +5,43 @@ using JobDescriptionAgent.Models;
 namespace JobDescriptionAgent.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/jd")]
     public class AgenticJobDescriptionController : ControllerBase
     {
-        private readonly AgenticWorkflowService _workflowService;
+        private readonly JDOrchestrator _orchestrator;
 
-        public AgenticJobDescriptionController(AgenticWorkflowService workflowService)
+        public AgenticJobDescriptionController(JDOrchestrator orchestrator)
         {
-            _workflowService = workflowService;
+            _orchestrator = orchestrator;
         }
 
-        [HttpPost("generate")]
+        [HttpPost]
+        [ProducesResponseType(typeof(JDResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Generate([FromBody] JDRequest request)
         {
-            var (jd, complianceReview) = await _workflowService.RunAgenticWorkflowAsync(request.InitialInput);
+            if (string.IsNullOrWhiteSpace(request?.InitialInput))
+            {
+                return BadRequest("Initial input is required");
+            }
 
-    if (jd.StartsWith("Clarifier Agent needs more information"))
-    {
-        // return early if clarification is needed
-        return Ok(new JDResponse
-        {
-            FinalJobDescription = jd,
-            ComplianceReview = ""
-        });
-    }
+            var (jd, complianceReview) = await _orchestrator.RunAsync(request.InitialInput);
 
-    return Ok(new JDResponse
-    {
-        FinalJobDescription = jd,
-        ComplianceReview = complianceReview
-    });
+            if (jd.StartsWith("Clarifier Agent needs more information"))
+            {
+                return Ok(new JDResponse
+                {
+                    FinalJobDescription = jd,
+                    ComplianceReview = ""
+                });
+            }
+
+            return Ok(new JDResponse
+            {
+                FinalJobDescription = jd,
+                ComplianceReview = complianceReview
+            });
         }
     }
 }
+
