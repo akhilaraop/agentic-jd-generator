@@ -1,16 +1,13 @@
 
-using JobDescriptionAgent.Models;
-using System.Threading.Tasks;
-
 namespace JobDescriptionAgent.Services
 {
     public class AgenticWorkflowService
     {
-        private readonly LlamaService _llama;
+        private readonly LanguageModelService _llama;
 
-        public AgenticWorkflowService(LlamaService llamaService)
+        public AgenticWorkflowService(LanguageModelService LanguageModelService)
         {
-            _llama = llamaService;
+            _llama = LanguageModelService;
         }
 
         public async Task<(string JobDescription, string ComplianceReview)> RunAgenticWorkflowAsync(string initialInput)
@@ -28,23 +25,26 @@ namespace JobDescriptionAgent.Services
 
             var clarify = await _llama.AskAsync(clarifierPrompt, initialInput);
 
-            // if (!clarify.Trim().ToLower().StartsWith("no clarifications needed"))
-            // {
-            //     return ($"Clarifier Agent needs more information:\n\n{clarify}", "");
-            // }
+            /* if (!clarify.Trim().ToLower().StartsWith("no clarifications needed"))
+            {
+                return ($"Clarifier Agent needs more information:\n\n{clarify}", "");
+            } */
 
+            // STEP 1: Initial Generation
             var generatePrompt = @"
             You are a JD Generator Agent. Use the user's input to write a professional job description.
             Structure it with: About Us, Role, Responsibilities, Requirements, Perks.";
 
             var generate = await _llama.AskAsync(generatePrompt, initialInput);
 
+            // STEP 2: Critique
             var critiquePrompt = @"
             You are a Critique Agent. Review and revise the job description for tone, clarity, and formatting.
             Ensure it's inclusive, modern, and professionally written.";
 
             var critique = await _llama.AskAsync(critiquePrompt, generate);
 
+            // ⚖️ STEP 3: Compliance Check
             var compliancePrompt = @"
             You are a Compliance & Fairness Agent for job descriptions. 
             Your responsibilities include:
@@ -57,9 +57,36 @@ namespace JobDescriptionAgent.Services
 
             var complianceReview = await _llama.AskAsync(compliancePrompt, critique);
 
-            return (critique, complianceReview);
+
+            // 🔁 STEP 4: Rewrite with Feedback
+            var rewriterPrompt = @"
+            You are a JD Rewriter Agent. 
+            You are given a job description along with critique and compliance feedback.
+            Your task is to rewrite the job description incorporating all suggested improvements.
+
+            Maintain a clear structure:
+            - About Us
+            - Role
+            - Responsibilities
+            - Requirements
+            - Perks
+
+            Only return the improved job description.";
+
+            var rewriterInput = $@"
+            Original JD:
+            {generate}
+
+            Critique Feedback:
+            {critique}
+
+            Compliance Feedback:
+            {complianceReview}
+            ";
+
+            var improvedJD = await _llama.AskAsync(rewriterPrompt, rewriterInput);
+
+            return (improvedJD, complianceReview);
         }
-
-
     }
 }

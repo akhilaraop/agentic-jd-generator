@@ -6,15 +6,17 @@ using Microsoft.Extensions.Configuration;
 
 namespace JobDescriptionAgent.Services
 {
-    public class LlamaService
+    public class LanguageModelService
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
 
-        public LlamaService(IConfiguration config)
+        public LanguageModelService(IConfiguration config)
         {
             _httpClient = new HttpClient();
-            _apiKey = config["GROQ_API_KEY"] ?? throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");
+            _apiKey =
+                config["GROQ_API_KEY"]
+                ?? throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");
         }
 
         public async Task<string> AskAsync(string prompt, string userInput)
@@ -24,13 +26,13 @@ namespace JobDescriptionAgent.Services
             var requestBody = new
             {
                 model = "llama3-8b-8192",
-                messages = new[]
-            {
-            new { role = "user", content = fullPrompt }
-            }
+                messages = new[] { new { role = "user", content = fullPrompt } },
             };
-            
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.groq.com/openai/v1/chat/completions")
+
+            var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                "https://api.groq.com/openai/v1/chat/completions"
+            )
             {
                 Headers = { { "Authorization", $"Bearer {_apiKey}" } },
                 Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
@@ -40,20 +42,18 @@ namespace JobDescriptionAgent.Services
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception($"Error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                throw new Exception(
+                    $"Error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}"
+                );
             }
 
             var json = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(json);
-            return doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString()!;
-
-
-
-
-
-
-
-
+            return doc
+                .RootElement.GetProperty("choices")[0]
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString()!;
         }
     }
 }
