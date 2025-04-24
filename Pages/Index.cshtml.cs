@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using JobDescriptionAgent.Services;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace JobDescriptionAgent.Pages
 {
@@ -15,6 +16,7 @@ namespace JobDescriptionAgent.Pages
         
         public string? GeneratedDescription { get; set; }
         public string? ErrorMessage { get; set; }
+        public Dictionary<string, string>? Stages { get; set; }
 
         public IndexModel(IAgenticWorkflowService workflowService, ILogger<IndexModel> logger)
         {
@@ -35,13 +37,9 @@ namespace JobDescriptionAgent.Pages
 
             try
             {
-                var (description, notes) = await _workflowService.RunAsync(JobDescription);
+                var (description, stages) = await _workflowService.RunAsync(JobDescription);
                 GeneratedDescription = description;
-                
-                if (!string.IsNullOrEmpty(notes))
-                {
-                    GeneratedDescription = $"{description}\n\nNotes:\n{notes}";
-                }
+                Stages = stages;
             }
             catch (Exception ex)
             {

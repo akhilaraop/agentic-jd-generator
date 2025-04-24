@@ -97,19 +97,22 @@ namespace JobDescriptionAgent.Services
             _logger = logger;
         }
 
-        public async Task<(string description, string notes)> RunAsync(string input)
+        public async Task<(string description, Dictionary<string, string> stages)> RunAsync(string input)
         {
             try
             {
+                var stages = new Dictionary<string, string>();
+
                 // Step 1: Clarification
                 var clarificationResponse = await _languageModelService.AskAsync(
                     _settings.Value.Prompts.ClarifierPrompt,
                     input
                 );
+                stages["clarity"] = clarificationResponse;
 
                 if (clarificationResponse.Contains("Need clarification", StringComparison.OrdinalIgnoreCase))
                 {
-                    return (string.Empty, clarificationResponse);
+                    return (string.Empty, stages);
                 }
 
                 string assumptions = string.Empty;
@@ -123,18 +126,21 @@ namespace JobDescriptionAgent.Services
                     _settings.Value.Prompts.GeneratorPrompt,
                     input
                 );
+                stages["initial"] = generatedJD;
 
                 // Step 3: Critique
                 var critique = await _languageModelService.AskAsync(
                     _settings.Value.Prompts.CritiquePrompt,
                     generatedJD
                 );
+                stages["critique"] = critique;
 
                 // Step 4: Compliance Check
                 var complianceCheck = await _languageModelService.AskAsync(
                     _settings.Value.Prompts.CompliancePrompt,
                     generatedJD
                 );
+                stages["compliance"] = complianceCheck;
 
                 // Step 5: Final Rewrite
                 var finalJD = await _languageModelService.AskAsync(
@@ -145,7 +151,7 @@ namespace JobDescriptionAgent.Services
                 var notes = string.Join("\n\n", new[] { assumptions, critique, complianceCheck }
                     .Where(n => !string.IsNullOrEmpty(n)));
 
-                return (finalJD, notes);
+                return (finalJD, stages);
             }
             catch (Exception ex)
             {
