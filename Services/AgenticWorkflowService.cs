@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using JobDescriptionAgent.Models;
 
 namespace JobDescriptionAgent.Services
@@ -79,54 +81,77 @@ namespace JobDescriptionAgent.Services
         public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
     }
 
-    public class JDOrchestrator
+    public class JDOrchestrator : IAgenticWorkflowService
     {
-        private readonly ClarifierAgent _clarifier;
-        private readonly GeneratorAgent _generator;
-        private readonly CritiqueAgent _critic;
-        private readonly ComplianceAgent _compliance;
-        private readonly RewriterAgent _rewriter;
+        private readonly LanguageModelService _languageModelService;
+        private readonly IOptions<AppSettings> _settings;
+        private readonly ILogger<JDOrchestrator> _logger;
 
-        public JDOrchestrator(LanguageModelService LanguageModelService, IConfiguration config)
+        public JDOrchestrator(
+            LanguageModelService languageModelService,
+            IOptions<AppSettings> settings,
+            ILogger<JDOrchestrator> logger)
         {
-            _clarifier = new ClarifierAgent(LanguageModelService, config);
-            _generator = new GeneratorAgent(LanguageModelService, config);
-            _critic = new CritiqueAgent(LanguageModelService, config);
-            _compliance = new ComplianceAgent(LanguageModelService, config);
-            _rewriter = new RewriterAgent(LanguageModelService, config);
+            _languageModelService = languageModelService;
+            _settings = settings;
+            _logger = logger;
         }
 
-        public async Task<JDResponse> RunAsync(string userInput)
+        public async Task<(string description, string notes)> RunAsync(string input)
         {
-            var response = new JDResponse();
-            
-            var clarify = await _clarifier.ExecuteAsync(userInput);
-            
-            // Check if clarification is needed
-            if (clarify.Trim().StartsWith("Need clarification"))
+            try
             {
-                response.FinalJobDescription = $"Clarifier Agent needs more information:\n\n{clarify}";
-                return response;
-            }
+                // Step 1: Clarification
+                var clarificationResponse = await _languageModelService.AskAsync(
+                    _settings.Value.Prompts.ClarifierPrompt,
+                    input
+                );
 
-            // Extract assumptions if any
-            if (clarify.Contains("Making the following assumptions:"))
+                if (clarificationResponse.Contains("Need clarification", StringComparison.OrdinalIgnoreCase))
+                {
+                    return (string.Empty, clarificationResponse);
+                }
+
+                string assumptions = string.Empty;
+                if (clarificationResponse.Contains("Making the following assumptions:", StringComparison.OrdinalIgnoreCase))
+                {
+                    assumptions = clarificationResponse;
+                }
+
+                // Step 2: Generation
+                var generatedJD = await _languageModelService.AskAsync(
+                    _settings.Value.Prompts.GeneratorPrompt,
+                    input
+                );
+
+                // Step 3: Critique
+                var critique = await _languageModelService.AskAsync(
+                    _settings.Value.Prompts.CritiquePrompt,
+                    generatedJD
+                );
+
+                // Step 4: Compliance Check
+                var complianceCheck = await _languageModelService.AskAsync(
+                    _settings.Value.Prompts.CompliancePrompt,
+                    generatedJD
+                );
+
+                // Step 5: Final Rewrite
+                var finalJD = await _languageModelService.AskAsync(
+                    _settings.Value.Prompts.RewriterPrompt,
+                    $"Original JD:\n{generatedJD}\n\nCritique:\n{critique}\n\nCompliance Notes:\n{complianceCheck}"
+                );
+
+                var notes = string.Join("\n\n", new[] { assumptions, critique, complianceCheck }
+                    .Where(n => !string.IsNullOrEmpty(n)));
+
+                return (finalJD, notes);
+            }
+            catch (Exception ex)
             {
-                response.Assumptions = clarify.Split("Making the following assumptions:")[1].Trim();
+                _logger.LogError(ex, "Error in JD generation workflow");
+                throw;
             }
-
-            // Generate all components
-            response.InitialDraft = await _generator.ExecuteAsync(userInput);
-            response.CritiqueFeedback = await _critic.ExecuteAsync(response.InitialDraft);
-            response.ComplianceReview = await _compliance.ExecuteAsync(response.CritiqueFeedback);
-
-            response.CombinedFeedback = $"Original JD:\n{response.InitialDraft}\n\n" +
-                                      $"Critique Feedback:\n{response.CritiqueFeedback}\n\n" +
-                                      $"Compliance Feedback:\n{response.ComplianceReview}";
-
-            response.FinalJobDescription = await _rewriter.ExecuteAsync(response.CombinedFeedback);
-
-            return response;
         }
     }
 }

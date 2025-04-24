@@ -1,0 +1,431 @@
+# Task: Add Razor Pages UI for Job Description Generator
+
+## Overview
+Create a modern, responsive Razor Pages UI for the AI-powered job description generator that displays the complete generation process, including all intermediate steps and feedback.
+
+## Technical Requirements
+
+1. Project Updates:
+
+Add the following to AgenticJDGenerator.csproj:
+```xml
+<ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
+</ItemGroup>
+```
+
+2. Program.cs Updates:
+```csharp
+// Add before builder.Services.AddControllers();
+builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
+
+// Add before app.MapControllers();
+app.MapRazorPages();
+```
+
+## File Structure
+
+```
+Pages/
+├── Shared/
+│   ├── _Layout.cshtml
+│   ├── _Layout.cshtml.css
+│   └── _ValidationScriptsPartial.cshtml
+├── _ViewImports.cshtml
+├── _ViewStart.cshtml
+├── Index.cshtml
+├── Index.cshtml.cs
+├── Privacy.cshtml
+└── Error.cshtml
+```
+
+## Implementation Steps
+
+1. Create Index.cshtml.cs (PageModel):
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using JobDescriptionAgent.Services;
+using JobDescriptionAgent.Models;
+
+namespace JobDescriptionAgent.Pages
+{
+    public class IndexModel : PageModel
+    {
+        private readonly JDOrchestrator _orchestrator;
+        
+        [BindProperty]
+        public string InitialInput { get; set; } = string.Empty;
+        
+        public JDResponse? GeneratedResponse { get; private set; }
+        
+        public string? ErrorMessage { get; private set; }
+
+        public IndexModel(JDOrchestrator orchestrator)
+        {
+            _orchestrator = orchestrator;
+        }
+
+        public void OnGet()
+        {
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            if (string.IsNullOrWhiteSpace(InitialInput))
+            {
+                ErrorMessage = "Please provide job description requirements.";
+                return Page();
+            }
+
+            try
+            {
+                GeneratedResponse = await _orchestrator.RunAsync(InitialInput);
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error generating job description: {ex.Message}";
+                return Page();
+            }
+        }
+    }
+}
+```
+
+2. Create Index.cshtml:
+```cshtml
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "AI Job Description Generator";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="display-4 text-center mb-4">AI Job Description Generator</h1>
+            
+            <form method="post" class="mb-4">
+                <div class="form-group">
+                    <label asp-for="InitialInput" class="form-label">Job Description Requirements</label>
+                    <textarea asp-for="InitialInput" 
+                             class="form-control" 
+                             rows="4" 
+                             placeholder="Example: Senior Python Developer in Boston with AWS, FastAPI experience"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Generate Job Description</button>
+            </form>
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @Model.ErrorMessage
+                </div>
+            }
+
+            @if (Model.GeneratedResponse != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#final">Final Result</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#process">Generation Process</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="final">
+                                <h3>Final Job Description</h3>
+                                <div class="bg-light p-3 rounded">
+                                    @Html.Raw(Model.GeneratedResponse.FinalJobDescription.Replace("\n", "<br/>"))
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(Model.GeneratedResponse.Assumptions))
+                                {
+                                    <div class="alert alert-info mt-3">
+                                        <h5>Assumptions Made:</h5>
+                                        @Html.Raw(Model.GeneratedResponse.Assumptions.Replace("\n", "<br/>"))
+                                    </div>
+                                }
+                            </div>
+                            
+                            <div class="tab-pane fade" id="process">
+                                <div class="accordion" id="generationProcess">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#initialDraft">
+                                                1. Initial Draft
+                                            </button>
+                                        </h2>
+                                        <div id="initialDraft" class="accordion-collapse collapse show">
+                                            <div class="accordion-body">
+                                                @Html.Raw(Model.GeneratedResponse.InitialDraft.Replace("\n", "<br/>"))
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#critique">
+                                                2. Critique Feedback
+                                            </button>
+                                        </h2>
+                                        <div id="critique" class="accordion-collapse collapse">
+                                            <div class="accordion-body">
+                                                @Html.Raw(Model.GeneratedResponse.CritiqueFeedback.Replace("\n", "<br/>"))
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#compliance">
+                                                3. Compliance Review
+                                            </button>
+                                        </h2>
+                                        <div id="compliance" class="accordion-collapse collapse">
+                                            <div class="accordion-body">
+                                                @Html.Raw(Model.GeneratedResponse.ComplianceReview.Replace("\n", "<br/>"))
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#combined">
+                                                4. Combined Feedback
+                                            </button>
+                                        </h2>
+                                        <div id="combined" class="accordion-collapse collapse">
+                                            <div class="accordion-body">
+                                                @Html.Raw(Model.GeneratedResponse.CombinedFeedback.Replace("\n", "<br/>"))
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#final">
+                                                5. Final Version
+                                            </button>
+                                        </h2>
+                                        <div id="final" class="accordion-collapse collapse">
+                                            <div class="accordion-body">
+                                                @Html.Raw(Model.GeneratedResponse.FinalJobDescription.Replace("\n", "<br/>"))
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Enable Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+        
+        // Add copy to clipboard functionality
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('Copied to clipboard!');
+            }).catch(function(err) {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    </script>
+}
+```
+
+3. Create _Layout.cshtml:
+```cshtml
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Job Description Generator</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/JobDescriptionAgent.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">JD Generator</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+    
+    <main role="main" class="pb-3">
+        @RenderBody()
+    </main>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2024 - Job Description Generator
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+```
+
+4. Add site.css:
+```css
+/* Custom styles for the job description generator */
+.jd-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.form-container {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.result-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #e7f1ff;
+    color: #0c63e4;
+}
+
+.copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.copy-button:hover {
+    background-color: #e2e6ea;
+}
+
+.assumptions-box {
+    background-color: #e7f1ff;
+    border-left: 4px solid #0d6efd;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .jd-container {
+        padding: 10px;
+    }
+    
+    .form-container,
+    .result-container {
+        padding: 15px;
+    }
+}
+```
+
+## Implementation Notes
+
+1. Features to Implement:
+   - Real-time validation of input
+   - Loading spinner during generation
+   - Copy to clipboard functionality
+   - Export to PDF option
+   - Session-based history
+   - Responsive design for all screen sizes
+
+2. Best Practices:
+   - Use partial views for reusable components
+   - Implement proper error handling
+   - Add loading states
+   - Include proper validation
+   - Maintain accessibility standards
+
+3. Additional Enhancements:
+   - Add syntax highlighting for technical requirements
+   - Implement dark/light mode toggle
+   - Add export options (PDF, Word, etc.)
+   - Include a feedback mechanism
+   - Add session history
+
+## Security Considerations
+
+1. Input Validation:
+   - Implement proper input sanitization
+   - Add length limits
+   - Validate all user inputs
+
+2. Error Handling:
+   - Implement proper exception handling
+   - Show user-friendly error messages
+   - Log errors appropriately
+
+## Testing Instructions
+
+1. Manual Testing:
+   - Test with various input lengths
+   - Verify error handling
+   - Check responsive layout
+   - Test copy functionality
+   - Validate form submission
+   - Test all interactive elements
+
+2. Edge Cases:
+   - Empty input handling
+   - Very long inputs
+   - Special characters
+   - Network failures
+   - API timeout scenarios
+
+## Documentation
+
+1. Setup Instructions:
+   - Update project dependencies
+   - Configure Razor Pages
+   - Set up static files
+   - Configure routing
+
+2. Usage Guide:
+   - Basic usage examples
+   - Advanced features
+   - Troubleshooting tips
+   - Best practices
+
+3. Maintenance:
+   - Code structure overview
+   - Component documentation
+   - Error handling procedures
+   - Update procedures 

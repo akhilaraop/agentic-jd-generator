@@ -1,0 +1,53 @@
+@page
+@model JobDescriptionAgent.Pages.IndexModel
+@{
+    ViewData["Title"] = "AI Job Description Generator";
+}
+
+<div class="container mt-4">
+    <h1 class="display-4 mb-4">AI Job Description Generator</h1>
+    <p class="lead mb-4">Enter your job requirements below and let our AI assist you in creating a professional job description.</p>
+
+    <form method="post" id="jdForm">
+        <div class="mb-3">
+            <label asp-for="JobDescription" class="form-label">Job Requirements</label>
+            <textarea asp-for="JobDescription" class="form-control" rows="5" placeholder="Example: Need a senior backend developer with expertise in .NET Core and microservices..."></textarea>
+            <span asp-validation-for="JobDescription" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary mb-4">Generate Description</button>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.GeneratedDescription))
+    {
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Generated Job Description</h5>
+            </div>
+            <div class="card-body">
+                <pre class="mb-0" style="white-space: pre-wrap;">@Model.GeneratedDescription</pre>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-outline-primary" onclick="copyToClipboard()">Copy to Clipboard</button>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function copyToClipboard() {
+            const description = document.querySelector('pre').textContent;
+            navigator.clipboard.writeText(description)
+                .then(() => alert('Copied to clipboard!'))
+                .catch(err => console.error('Failed to copy text: ', err));
+        }
+    </script>
+} 

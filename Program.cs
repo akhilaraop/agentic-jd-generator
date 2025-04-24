@@ -6,9 +6,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Configure strongly typed settings
 builder.Services.Configure<AppSettings>(builder.Configuration);
 
+// Add Razor Pages support
+builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddControllers();
 builder.Services.AddSingleton<LanguageModelService>();
-builder.Services.AddSingleton<JDOrchestrator>();
+builder.Services.AddSingleton<IAgenticWorkflowService, JDOrchestrator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -35,9 +37,12 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "JD Agent API v1");
 });
 
-
-
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
 app.UseAuthorization();
+
+app.MapRazorPages();
 app.MapControllers();
+
 app.Run();
