@@ -21,8 +21,23 @@ namespace JobDescriptionAgent.Controllers
         [HttpPost("generate")]
         public async Task<IActionResult> Generate([FromBody] JDRequest request)
         {
-            var result = await _workflowService.RunAgenticWorkflowAsync(request.InitialInput);
-            return Ok(new { FinalJobDescription = result });
+            var (jd, complianceReview) = await _workflowService.RunAgenticWorkflowAsync(request.InitialInput);
+
+    if (jd.StartsWith("Clarifier Agent needs more information"))
+    {
+        // return early if clarification is needed
+        return Ok(new JDResponse
+        {
+            FinalJobDescription = jd,
+            ComplianceReview = ""
+        });
+    }
+
+    return Ok(new JDResponse
+    {
+        FinalJobDescription = jd,
+        ComplianceReview = complianceReview
+    });
         }
     }
 }
