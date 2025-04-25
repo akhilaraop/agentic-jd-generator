@@ -21,80 +21,151 @@ namespace JobDescriptionAgent.Services
     public abstract class AgentBase : IAgent
     {
         protected readonly LanguageModelService _LanguageModelService;
+        protected readonly IAgentPromptService _promptService;
         protected readonly string _model;
-        protected readonly string _prompt;
-        protected AgentBase(LanguageModelService LanguageModelService, IConfiguration config, string promptKey)
+        protected readonly string _agentType;
+
+        protected AgentBase(
+            LanguageModelService LanguageModelService,
+            IAgentPromptService promptService,
+            IConfiguration config,
+            string agentType)
         {
             _LanguageModelService = LanguageModelService;
+            _promptService = promptService;
             _model = config["LLM:Model"] ?? "llama3-8b-8192";
-            _prompt = config[$"Prompts:{promptKey}"] ?? string.Empty;
+            _agentType = agentType;
         }
 
         public abstract string Name { get; }
         public abstract string Role { get; }
         public abstract string Goal { get; }
-        public abstract Task<string> ExecuteAsync(string input);
+
+        public virtual async Task<string> ExecuteAsync(string input)
+        {
+            var agentConfig = _promptService.GetAgentPrompt(_agentType);
+            var prompt = $"{agentConfig.Description}\n\nTask:\n{string.Join("\n", agentConfig.Task)}\n\nConstraints:\n{string.Join("\n", agentConfig.Constraints ?? new List<string>())}";
+            return await _LanguageModelService.AskAsync(prompt, input, _model);
+        }
     }
 
     public class ClarifierAgent : AgentBase
     {
-        public ClarifierAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Clarifier") { }
+        public ClarifierAgent(
+            LanguageModelService LanguageModelService,
+            IAgentPromptService promptService,
+            IConfiguration config)
+            : base(LanguageModelService, promptService, config, "clarifier") { }
+
         public override string Name => "ClarifierAgent";
         public override string Role => "Clarifier";
         public override string Goal => "Clarify vague inputs and make reasonable assumptions";
-        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
     }
 
     public class GeneratorAgent : AgentBase
     {
-        public GeneratorAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Generator") { }
+        public GeneratorAgent(
+            LanguageModelService LanguageModelService,
+            IAgentPromptService promptService,
+            IConfiguration config)
+            : base(LanguageModelService, promptService, config, "generator") { }
+
         public override string Name => "GeneratorAgent";
         public override string Role => "Generator";
         public override string Goal => "Generate the initial job description";
-        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
     }
 
     public class CritiqueAgent : AgentBase
     {
-        public CritiqueAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Critique") { }
+        public CritiqueAgent(
+            LanguageModelService LanguageModelService,
+            IAgentPromptService promptService,
+            IConfiguration config)
+            : base(LanguageModelService, promptService, config, "critique") { }
+
         public override string Name => "CritiqueAgent";
         public override string Role => "Critic";
         public override string Goal => "Polish the tone, formatting, and inclusiveness";
-        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
     }
 
     public class ComplianceAgent : AgentBase
     {
-        public ComplianceAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Compliance") { }
+        public ComplianceAgent(
+            LanguageModelService LanguageModelService,
+            IAgentPromptService promptService,
+            IConfiguration config)
+            : base(LanguageModelService, promptService, config, "compliance") { }
+
         public override string Name => "ComplianceAgent";
         public override string Role => "Compliance Reviewer";
         public override string Goal => "Check for bias, EEOC compliance, vague requirements";
-        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
     }
 
     public class RewriterAgent : AgentBase
     {
-        public RewriterAgent(LanguageModelService LanguageModelService, IConfiguration config) : base(LanguageModelService, config, "Rewriter") { }
+        public RewriterAgent(
+            LanguageModelService LanguageModelService,
+            IAgentPromptService promptService,
+            IConfiguration config)
+            : base(LanguageModelService, promptService, config, "rewriter") { }
+
         public override string Name => "RewriterAgent";
         public override string Role => "Improver";
         public override string Goal => "Rewrite the JD using feedback from critique and compliance";
-        public override async Task<string> ExecuteAsync(string input) => await _LanguageModelService.AskAsync(_prompt, input, _model);
+    }
+
+    public class FinalizerAgent : AgentBase
+    {
+        public FinalizerAgent(
+            LanguageModelService LanguageModelService,
+            IAgentPromptService promptService,
+            IConfiguration config)
+            : base(LanguageModelService, promptService, config, "finalizer") { }
+
+        public override string Name => "FinalizerAgent";
+        public override string Role => "Finalizer";
+        public override string Goal => "Polish and enhance the final job description for maximum impact";
+
+        public override async Task<string> ExecuteAsync(string input)
+        {
+            var agentConfig = _promptService.GetAgentPrompt(_agentType);
+            var prompt = $"{agentConfig.Description}\n\nTask:\n{string.Join("\n", agentConfig.Task)}\n\nStyle Guidelines:\n{string.Join("\n", agentConfig.StyleGuidelines?.Guidelines ?? new List<string>())}\n\nConstraints:\n{string.Join("\n", agentConfig.Constraints ?? new List<string>())}";
+            return await _LanguageModelService.AskAsync(prompt, input, _model);
+        }
     }
 
     public class JDOrchestrator : IAgenticWorkflowService
     {
         private readonly LanguageModelService _languageModelService;
-        private readonly IOptions<AppSettings> _settings;
+        private readonly IAgentPromptService _promptService;
+        private readonly IConfiguration _config;
         private readonly ILogger<JDOrchestrator> _logger;
+
+        private readonly ClarifierAgent _clarifier;
+        private readonly GeneratorAgent _generator;
+        private readonly CritiqueAgent _critique;
+        private readonly ComplianceAgent _compliance;
+        private readonly RewriterAgent _rewriter;
+        private readonly FinalizerAgent _finalizer;
 
         public JDOrchestrator(
             LanguageModelService languageModelService,
-            IOptions<AppSettings> settings,
+            IAgentPromptService promptService,
+            IConfiguration config,
             ILogger<JDOrchestrator> logger)
         {
             _languageModelService = languageModelService;
-            _settings = settings;
+            _promptService = promptService;
+            _config = config;
             _logger = logger;
+
+            // Initialize agents
+            _clarifier = new ClarifierAgent(languageModelService, promptService, config);
+            _generator = new GeneratorAgent(languageModelService, promptService, config);
+            _critique = new CritiqueAgent(languageModelService, promptService, config);
+            _compliance = new ComplianceAgent(languageModelService, promptService, config);
+            _rewriter = new RewriterAgent(languageModelService, promptService, config);
+            _finalizer = new FinalizerAgent(languageModelService, promptService, config);
         }
 
         public async Task<(string description, Dictionary<string, string> stages)> RunAsync(string input)
@@ -104,10 +175,7 @@ namespace JobDescriptionAgent.Services
                 var stages = new Dictionary<string, string>();
 
                 // Step 1: Clarification
-                var clarificationResponse = await _languageModelService.AskAsync(
-                    _settings.Value.Prompts.ClarifierPrompt,
-                    input
-                );
+                var clarificationResponse = await _clarifier.ExecuteAsync(input);
                 stages["clarity"] = clarificationResponse;
 
                 if (clarificationResponse.Contains("Need clarification", StringComparison.OrdinalIgnoreCase))
@@ -122,31 +190,26 @@ namespace JobDescriptionAgent.Services
                 }
 
                 // Step 2: Generation
-                var generatedJD = await _languageModelService.AskAsync(
-                    _settings.Value.Prompts.GeneratorPrompt,
-                    input
-                );
+                var generatedJD = await _generator.ExecuteAsync(input);
                 stages["initial"] = generatedJD;
 
                 // Step 3: Critique
-                var critique = await _languageModelService.AskAsync(
-                    _settings.Value.Prompts.CritiquePrompt,
-                    generatedJD
-                );
+                var critique = await _critique.ExecuteAsync(generatedJD);
                 stages["critique"] = critique;
 
                 // Step 4: Compliance Check
-                var complianceCheck = await _languageModelService.AskAsync(
-                    _settings.Value.Prompts.CompliancePrompt,
-                    generatedJD
-                );
+                var complianceCheck = await _compliance.ExecuteAsync(generatedJD);
                 stages["compliance"] = complianceCheck;
 
-                // Step 5: Final Rewrite
-                var finalJD = await _languageModelService.AskAsync(
-                    _settings.Value.Prompts.RewriterPrompt,
+                // Step 5: Rewrite with feedback
+                var rewrittenJD = await _rewriter.ExecuteAsync(
                     $"Original JD:\n{generatedJD}\n\nCritique:\n{critique}\n\nCompliance Notes:\n{complianceCheck}"
                 );
+                stages["rewrite"] = rewrittenJD;
+
+                // Step 6: Final polish
+                var finalJD = await _finalizer.ExecuteAsync(rewrittenJD);
+                stages["final"] = finalJD;
 
                 var notes = string.Join("\n\n", new[] { assumptions, critique, complianceCheck }
                     .Where(n => !string.IsNullOrEmpty(n)));

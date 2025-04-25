@@ -9,8 +9,22 @@ builder.Services.Configure<AppSettings>(builder.Configuration);
 // Add Razor Pages support
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddControllers();
+
+// Register services
 builder.Services.AddSingleton<LanguageModelService>();
-builder.Services.AddSingleton<IAgenticWorkflowService, JDOrchestrator>();
+builder.Services.AddScoped<IAgentPromptService, AgentPromptService>();
+
+// Register agents
+builder.Services.AddScoped<ClarifierAgent>();
+builder.Services.AddScoped<GeneratorAgent>();
+builder.Services.AddScoped<CritiqueAgent>();
+builder.Services.AddScoped<ComplianceAgent>();
+builder.Services.AddScoped<RewriterAgent>();
+builder.Services.AddScoped<FinalizerAgent>();
+
+// Register orchestrator
+builder.Services.AddScoped<IAgenticWorkflowService, JDOrchestrator>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
