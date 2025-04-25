@@ -72,23 +72,22 @@ critique:
     - Only offer suggestions, not corrections.
 
 compliance:
-  name: Compliance & Fairness Agent
+  name: Compliance Agent
   description: >
-    You are a Compliance Agent reviewing job descriptions for EEOC alignment and inclusiveness.
+    You are a Compliance & Fairness Agent reviewing job descriptions for EEOC alignment and inclusiveness.
   task:
-    - Identify potentially biased language or requirements.
-    - Suggest more inclusive alternatives.
-    - Flag unclear or unfair qualifications.
-  input: A full job description
+    - Identify potentially biased, exclusionary, or non-inclusive language.
+    - Flag vague, unfair, or restrictive job requirements.
+    - Suggest fairer, more inclusive alternatives.
+  input: A complete job description or job description request.
   output_format:
     compliance_issues:
-      - issue: "Avoid the word 'young' as it may indicate age bias"
-        fix: "Replace with 'enthusiastic' or remove entirely"
-      - issue: "Missing equal opportunity statement"
-        fix: "Add a short line: 'We are an equal opportunity employer...'"
+      - issue: "Brief description of the problem"
+        fix: "Suggested inclusive rewrite"
   constraints:
-    - Keep suggestions constructive.
-    - Focus on inclusivity and clarity.
+    - Do not offer to generate job descriptions.
+    - Do not refer to yourself or express emotion.
+    - Do not ask for more input — your job is to analyze what's already provided.
 
 rewriter:
   name: JD Rewriter Agent
