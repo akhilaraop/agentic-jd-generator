@@ -1,0 +1,105 @@
+@page
+@model JobDescriptionAgent.Pages.SavedDescriptionsModel
+@{
+    ViewData["Title"] = "Saved Job Descriptions";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a asp-page="/Index" class="text-decoration-none">
+                <i class="fas fa-home me-2"></i>Back to Home
+            </a>
+            <h1 class="mt-2">@ViewData["Title"]</h1>
+        </div>
+        <a asp-page="/Index" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create New
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (!Model.SavedDescriptions.Any())
+    {
+        <div class="alert alert-info" role="alert">
+            No saved job descriptions found. <a asp-page="/Index">Generate a new one</a>!
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            @foreach (var jd in Model.SavedDescriptions)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">@jd.Title</h5>
+                            <small class="text-muted">@jd.CreatedAt.ToString("MMM dd, yyyy")</small>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text text-muted mb-3">Initial Input:</p>
+                            <p class="card-text">@jd.InitialInput</p>
+                            <hr />
+                            <p class="card-text text-muted mb-3">Generated Description:</p>
+                            <p class="card-text">@jd.Description</p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('@jd.Description')">
+                                    <i class="fas fa-copy me-2"></i>Copy
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="deleteDescription(@jd.Id)">
+                                    <i class="fas fa-trash me-2"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        function deleteDescription(id) {
+            if (confirm('Are you sure you want to delete this job description?')) {
+                fetch(`/api/saved-descriptions/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to delete job description');
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the job description');
+                });
+            }
+        }
+    </script>
+} 
