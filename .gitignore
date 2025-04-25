@@ -105,3 +105,43 @@ secrets.json
 project.lock.json
 .project
 .DS_Store
+
+# Test results
+TestResults/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Coverage results
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
+
+# Local development files
+*.Development.json
+secrets.json
+appsettings.Development.json
+
+# IDE - Visual Studio Code
+.vscode/
+*.code-workspace
+
+# IDE - JetBrains Rider
+.idea/
+*.sln.iml
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+jobdescription.db

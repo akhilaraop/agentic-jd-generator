@@ -1,10 +1,16 @@
 using JobDescriptionAgent.Services;
 using JobDescriptionAgent.Models;
+using JobDescriptionAgent.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure strongly typed settings
 builder.Services.Configure<AppSettings>(builder.Configuration);
+
+// Add database context
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Razor Pages support
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
@@ -58,5 +64,13 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapControllers();
+
+// Ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ApplicationDbContext>();
+    context.Database.EnsureCreated();
+}
 
 app.Run();

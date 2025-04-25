@@ -44,9 +44,14 @@
                 <div class="card shadow-sm fade-in">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Generated Job Description</h5>
-                        <button class="btn btn-outline-primary btn-sm" onclick="copyToClipboard()">
-                            <i class="fas fa-copy me-2"></i>Copy
-                        </button>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm me-2" onclick="copyToClipboard()">
+                                <i class="fas fa-copy me-2"></i>Copy
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#saveModal">
+                                <i class="fas fa-save me-2"></i>Save
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <pre class="mb-0">@Model.GeneratedDescription</pre>
@@ -154,6 +159,32 @@
                     </div>
                 }
             }
+        </div>
+    </div>
+</div>
+
+<!-- Save Modal -->
+<div class="modal fade" id="saveModal" tabindex="-1" aria-labelledby="saveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="saveModalLabel">Save Job Description</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-page-handler="Save">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <input type="hidden" name="description" value="@Model.GeneratedDescription">
+                    <input type="hidden" name="initialInput" value="@Model.JobDescription">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
