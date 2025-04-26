@@ -7,13 +7,7 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
-# Ignore build artifacts
-obj/Debug/
-obj/Release/
-bin/Debug/
-
-# Build results
-
+# .NET Core
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -29,98 +23,35 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
-# .NET Core
+# Build results
 project.lock.json
 project.fragment.lock.json
 artifacts/
-
-# ASP.NET Scaffolding
-ScaffoldingReadMe.txt
+*.binlog
 
 # NuGet Packages
 *.nupkg
-# NuGet Symbol Packages
 *.snupkg
 
-# Others
-~$*
-*~
-CodeCoverage/
-
-# MSBuild Binary and Structured Log
-*.binlog
-
-# MSTest test Results
+# Test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
-
-# NUnit
-*.VisualState.xml
-TestResult.xml
-nunit-*.xml
-
-*.user
-*.suo
-*.userosscache
-*.sln.ide
-*.sln.docstates
-obj/
-
-.vscode/
-bin/
-
-streamlit_ui_prompt.txt
-
-# Client-side libraries
-wwwroot/lib/
-wwwroot/lib/**/
-!wwwroot/lib/README.md
-
-# Development settings
-appsettings.Development.json
-
-# User Secrets
-*.Development.json
-secrets.json
+TestResults/
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
 
 # IDE - Visual Studio
 .vs/
 *.vspscc
 *.vssscc
 .builds
-
-# Rider
-.idea/
-*.sln.iml
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Temporary files
-*.swp
-*.swo
-*.*~
-project.lock.json
-.project
-.DS_Store
-
-# Test results
-TestResults/
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
-
-# Coverage results
-coverage/
-coverage.*
-*.coverage
-*.coveragexml
-
-# Local development files
-*.Development.json
-secrets.json
-appsettings.Development.json
+*.user
+*.suo
+*.userosscache
+*.sln.ide
+*.sln.docstates
 
 # IDE - Visual Studio Code
 .vscode/
@@ -145,3 +76,18 @@ Desktop.ini
 *.db-shm
 *.db-wal
 jobdescription.db
+
+# Client-side libraries
+wwwroot/lib/
+wwwroot/lib/**/
+!wwwroot/lib/README.md
+
+# Development settings
+appsettings.Development.json
+*.Development.json
+secrets.json
+
+# Project specific
+razor_pages_prompt
+testcases
+streamlit_ui_prompt.txt
