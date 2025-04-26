@@ -48,6 +48,14 @@ builder.Services.AddSwaggerGen(c =>
             return apiDesc.GroupName == "queries";
         return false;
     });
+    
+    // Add XML comments if available
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
 });
 
 // Enable CORS
@@ -67,6 +75,7 @@ var app = builder.Build();
 // Use CORS
 app.UseCors("AllowAll");
 
+// Configure Swagger
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -74,7 +83,12 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/queries/swagger.json", "Queries API v1");
 });
 
-app.UseHttpsRedirection();
+// Only use HTTPS redirection in production
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();

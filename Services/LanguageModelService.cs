@@ -18,6 +18,7 @@ namespace JobDescriptionAgent.Services
         {
             _httpClient = new HttpClient();
             _apiSettings = options.Value.GroqApi ?? throw new InvalidOperationException("GroqApi settings are missing in configuration.");
+            _apiSettings.ApiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY") ?? _apiSettings.ApiKey;
             
             if (string.IsNullOrEmpty(_apiSettings.ApiKey))
                 throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");

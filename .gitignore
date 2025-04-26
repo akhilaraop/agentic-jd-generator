@@ -91,3 +91,5 @@ secrets.json
 razor_pages_prompt
 testcases
 streamlit_ui_prompt.txt
+
+.env

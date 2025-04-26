@@ -1,6 +1,15 @@
-# Agentic Job Description Generator
+# Overview
 
-An AI-powered job description generator that uses a multi-agent workflow to create professional, inclusive, and compliant job descriptions.
+**Agentic Job Description Generator** is an AI-powered tool that uses a multi-agent workflow to generate professional, inclusive, and compliant job descriptions.
+
+- **What it does:**
+  - Leverages multiple specialized AI agents to analyze, clarify, generate, critique, and refine job descriptions.
+  - Produces high-quality, ready-to-use job descriptions with minimal user input.
+
+- **Why it matters:**
+  - **Faster JD creation:** Automates the process, saving time for hiring managers and HR teams.
+  - **Compliance:** Ensures job descriptions meet legal and industry standards for fairness and inclusivity.
+  - **Inclusivity:** Reviews and revises language to attract a diverse pool of candidates and reduce bias.
 
 ## Features
 
@@ -91,7 +100,42 @@ For a detailed system design document, see [System Design](docs/system_design.md
 
 - Docker installed on your machine
 - Git installed on your machine
-- Groq API key (get one from [Groq](https://console.groq.com))
+
+## Environment Variables
+
+> **Note:** Use the provided `.env.example` file as a reference. Copy it to `.env` and fill in your actual secrets before running the application.
+
+This project uses a `.env` file to store sensitive environment variables such as API keys. **Do not commit your real `.env` file to version control.**
+
+A sample `.env.example` file is provided. To set up your environment:
+
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Edit `.env` and fill in your actual secrets (e.g., your Groq API key).
+
+  Example `.env`:
+
+  ```
+  GROQ_API_KEY=your-groq-api-key-here
+  ```
+
+  **Note:** The application will not work without a valid API key in the `.env` file.
+
+  ### How to get a Groq API key
+
+  1. Go to the [Groq Console](https://console.groq.com/).
+  2. Sign up for a free account or log in if you already have one.
+  3. Once logged in, navigate to the **API Keys** section in your dashboard.
+  4. Click **Create API Key** (or similar button) to generate a new key.
+  5. Copy the generated API key and keep it secure.
+  6. Paste this key into your `.env` file as follows:
+     ```
+     GROQ_API_KEY=your-groq-api-key-here
+     ```
+
+  **Note:** Never share your API key publicly or commit it to version control.
 
 ## Setup with Docker
 
@@ -100,69 +144,37 @@ For a detailed system design document, see [System Design](docs/system_design.md
    git clone https://github.com/yourusername/agentic-jd-generator.git
    cd agentic-jd-generator
    ```
-
-2. **Build the Docker image:**
+2. **Set up your environment variables** (see above).
+3. **Build the Docker image:**
    ```bash
    docker build -t agentic-jd-generator .
    ```
-
-3. **Run the container:**
+4. **Run the container:**
    ```bash
-   # Run with API key
-   docker run -p 5000:5000 -e GROQ_API_KEY=your-api-key agentic-jd-generator
+   
+   docker-compose up --build
    ```
-
-4. **Access the application:**
+5. **Access the application:**
    - Swagger UI: http://localhost:5000/swagger
    - API Root: http://localhost:5000
 
 ### Environment Variables
+
 - `GROQ_API_KEY`: Your Groq API key (required)
 - `ASPNETCORE_ENVIRONMENT`: Set to "Development" by default
 - `ASPNETCORE_URLS`: Set to "http://+:5000" by default
 
-### Troubleshooting
-
-If you encounter any issues:
-
-1. **Check Docker logs:**
-   ```bash
-   docker logs <container_id>
-   ```
-
-2. **Verify the container is running:**
-   ```bash
-   docker ps
-   ```
-
-3. **Restart the container if needed:**
-   ```bash
-   docker stop <container_id>
-   docker start <container_id>
-   ```
-
 ## Configuration
 
 - `appsettings.json`: Contains non-sensitive configuration
-- User Secrets: Contains sensitive data (API keys)
-
-### Available Configuration
-
-```json
-{
-  "GroqApi": {
-    "BaseUrl": "https://api.groq.com/openai/v1/chat/completions",
-    "Model": "llama3-8b-8192"
-  }
-}
-```
 
 ## API Usage
 
-1. Open Swagger UI at http://localhost:5000/swagger
+1. Open Swagger UI at [http://localhost:5000/swagger](http://localhost:5000/swagger)
 2. Use the `/api/jd` endpoint for job description generation (POST, Command)
 3. Use the `/api/saved-descriptions` endpoints for retrieving saved job descriptions (GET, Query)
 4. Send a POST request with the following body:
+
 ```json
 {
   "initialInput": "Your job description requirements"

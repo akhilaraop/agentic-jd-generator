@@ -1,41 +1,34 @@
-# Use the official .NET 8.0 SDK image for building
+# -------- Stage 1: Build --------
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-
-# Set working directory
-WORKDIR /src
-
-# Copy the project file and restore dependencies
-COPY ["AgenticJDGenerator.csproj", "./"]
-RUN dotnet restore
-
-# Copy the rest of the project files
-COPY . .
-
-# Build the project
-RUN dotnet build -c Release -o /app/build
-
-# Publish the project
-FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish
-
-# Use the official .NET 8.0 ASP.NET runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
-
-# Set working directory
 WORKDIR /app
 
-# Copy the published files from the publish stage
-COPY --from=publish /app/publish .
+# Copy solution and project files
+COPY AgenticJDGenerator.sln .
+COPY AgenticJDGenerator.csproj .
 
-# Create a directory for the database
-RUN mkdir -p /app/data
+# Restore dependencies
+RUN dotnet restore
+
+# Copy the rest of the code
+COPY . .
+
+# Build and publish the release version
+RUN dotnet publish -c Release -o /out
+
+# -------- Stage 2: Run --------
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+
+# Copy published output from build stage
+COPY --from=build /out .
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_URLS=http://+:5001
 ENV ASPNETCORE_ENVIRONMENT=Development
 
-# Expose port 5000
-EXPOSE 5000
+# Expose port 5001
+EXPOSE 5001
 
-# Set the entry point
-ENTRYPOINT ["dotnet", "AgenticJDGenerator.dll"] 
+# Run the application
+ENTRYPOINT ["dotnet", "AgenticJDGenerator.dll"]
+    
