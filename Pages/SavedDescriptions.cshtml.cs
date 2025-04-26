@@ -34,29 +34,5 @@ namespace JobDescriptionAgent.Pages
                 ErrorMessage = "An error occurred while loading saved job descriptions.";
             }
         }
-
-        public async Task<IActionResult> OnPostDeleteAsync(int id)
-        {
-            try
-            {
-                var description = await _context.SavedJobDescriptions.FindAsync(id);
-                if (description == null)
-                {
-                    return NotFound();
-                }
-
-                _context.SavedJobDescriptions.Remove(description);
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "Job description deleted successfully.";
-                return RedirectToPage();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting job description {Id}", id);
-                ErrorMessage = "An error occurred while deleting the job description.";
-                return Page();
-            }
-        }
     }
 } 
