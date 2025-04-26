@@ -6,6 +6,9 @@ using JobDescriptionAgent.Models;
 
 namespace JobDescriptionAgent.Services
 {
+    /// <summary>
+    /// Service for interacting with the language model API (e.g., Groq/OpenAI).
+    /// </summary>
     public class LanguageModelService
     {
         private readonly HttpClient _httpClient;
@@ -20,16 +23,22 @@ namespace JobDescriptionAgent.Services
                 throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");
         }
 
-        // In LanguageModelService.cs
-public async Task<string> AskAsync(string prompt, string userInput, string? modelOverride = null)
-{
-    var fullPrompt = $"{prompt}\nUser input: {userInput}";
+        /// <summary>
+        /// Sends a prompt and user input to the language model and returns the response.
+        /// </summary>
+        /// <param name="prompt">The system prompt or instructions for the model.</param>
+        /// <param name="userInput">The user's input or question.</param>
+        /// <param name="modelOverride">Optional model override (defaults to configured model).</param>
+        /// <returns>The model's response as a string.</returns>
+        public async Task<string> AskAsync(string prompt, string userInput, string? modelOverride = null)
+        {
+            var fullPrompt = $"{prompt}\nUser input: {userInput}";
 
-    var requestBody = new
-    {
-        model = modelOverride ?? _apiSettings.Model,
-        messages = new[] { new { role = "user", content = fullPrompt } },
-    };
+            var requestBody = new
+            {
+                model = modelOverride ?? _apiSettings.Model,
+                messages = new[] { new { role = "user", content = fullPrompt } },
+            };
 
             var request = new HttpRequestMessage(HttpMethod.Post, _apiSettings.BaseUrl)
             {

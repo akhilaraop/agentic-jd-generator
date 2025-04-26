@@ -134,6 +134,9 @@ namespace JobDescriptionAgent.Services
         }
     }
 
+    /// <summary>
+    /// Orchestrates the multi-agent workflow for generating job descriptions.
+    /// </summary>
     public class JDOrchestrator : IAgenticWorkflowService
     {
         private readonly LanguageModelService _languageModelService;
@@ -168,6 +171,11 @@ namespace JobDescriptionAgent.Services
             _finalizer = new FinalizerAgent(languageModelService, promptService, config);
         }
 
+        /// <summary>
+        /// Runs the full job description generation workflow.
+        /// </summary>
+        /// <param name="input">The initial job description requirements provided by the user.</param>
+        /// <returns>A tuple containing the final job description and a dictionary of all workflow stages.</returns>
         public async Task<(string description, Dictionary<string, string> stages)> RunAsync(string input)
         {
             try
