@@ -11,6 +11,9 @@
                 <i class="fas fa-home me-2"></i>Back to Home
             </a>
             <h1 class="mt-2">@ViewData["Title"]</h1>
+            <p class="text-muted">
+                <i class="fas fa-sort-amount-down me-2"></i>Sorted by creation date (newest first)
+            </p>
         </div>
         <a asp-page="/Index" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>Create New
@@ -39,14 +42,17 @@
     }
     else
     {
-        <div class="row row-cols-1 row-cols-md-2 g-4">
+        <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
             @foreach (var jd in Model.SavedDescriptions)
             {
                 <div class="col">
                     <div class="card h-100 shadow-sm">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">@jd.Title</h5>
-                            <small class="text-muted">@jd.CreatedAt.ToString("MMM dd, yyyy")</small>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                @jd.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                            </small>
                         </div>
                         <div class="card-body">
                             <p class="card-text text-muted mb-3">Initial Input:</p>
@@ -66,6 +72,30 @@
                 </div>
             }
         </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Job descriptions pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link" asp-page="/SavedDescriptions" asp-route-currentPage="@(Model.CurrentPage - 1)" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" asp-page="/SavedDescriptions" asp-route-currentPage="@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                        <a class="page-link" asp-page="/SavedDescriptions" asp-route-currentPage="@(Model.CurrentPage + 1)" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
 </div>
 
