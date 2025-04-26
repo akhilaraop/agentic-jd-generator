@@ -155,14 +155,14 @@ A sample `.env.example` file is provided. To set up your environment:
    docker-compose up --build
    ```
 5. **Access the application:**
-   - Swagger UI: http://localhost:5000/swagger
-   - API Root: http://localhost:5000
+   - Swagger UI: http://localhost:5001/swagger
+   - UI: http://localhost:5001
 
 ### Environment Variables
 
 - `GROQ_API_KEY`: Your Groq API key (required)
 - `ASPNETCORE_ENVIRONMENT`: Set to "Development" by default
-- `ASPNETCORE_URLS`: Set to "http://+:5000" by default
+- `ASPNETCORE_URLS`: Set to "http://+:5001" by default
 
 ## Configuration
 
@@ -170,7 +170,7 @@ A sample `.env.example` file is provided. To set up your environment:
 
 ## API Usage
 
-1. Open Swagger UI at [http://localhost:5000/swagger](http://localhost:5000/swagger)
+1. Open Swagger UI at [http://localhost:5001/swagger](http://localhost:5001/swagger)
 2. Use the `/api/jd` endpoint for job description generation (POST, Command)
 3. Use the `/api/saved-descriptions` endpoints for retrieving saved job descriptions (GET, Query)
 4. Send a POST request with the following body:
