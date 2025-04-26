@@ -2,6 +2,7 @@ using JobDescriptionAgent.Services;
 using JobDescriptionAgent.Models;
 using JobDescriptionAgent.Data;
 using Microsoft.EntityFrameworkCore;
+using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,8 +32,23 @@ builder.Services.AddScoped<FinalizerAgent>();
 // Register orchestrator
 builder.Services.AddScoped<IAgenticWorkflowService, JDOrchestrator>();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Register MediatR
+builder.Services.AddMediatR(typeof(Program));
+
+// Register Swagger with separate docs for Commands and Queries
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("commands", new() { Title = "Commands API", Version = "v1" });
+    c.SwaggerDoc("queries", new() { Title = "Queries API", Version = "v1" });
+    c.DocInclusionPredicate((docName, apiDesc) =>
+    {
+        if (docName == "commands")
+            return apiDesc.GroupName == "commands";
+        if (docName == "queries")
+            return apiDesc.GroupName == "queries";
+        return false;
+    });
+});
 
 // Enable CORS
 builder.Services.AddCors(options =>
@@ -54,7 +70,8 @@ app.UseCors("AllowAll");
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "JD Agent API v1");
+    c.SwaggerEndpoint("/swagger/commands/swagger.json", "Commands API v1");
+    c.SwaggerEndpoint("/swagger/queries/swagger.json", "Queries API v1");
 });
 
 app.UseHttpsRedirection();
