@@ -68,10 +68,12 @@ The sequence diagram illustrates the flow of job description generation:
 3. JDOrchestrator coordinates the multi-agent workflow:
    - Clarifier Agent analyzes and clarifies the input
    - Generator Agent creates the initial job description
-   | Critique Agent reviews tone and formatting
+   - Critique Agent reviews tone and formatting
    - Compliance Agent checks for bias and compliance
    - Rewriter Agent incorporates feedback and produces the final version
 4. The final job description is returned to the user
+
+For a detailed system design document, see [System Design](docs/system_design.md).
 
 ## Persistence Layer
 
@@ -87,39 +89,57 @@ The sequence diagram illustrates the flow of job description generation:
 
 ## Prerequisites
 
-- .NET 8.0 SDK
+- Docker installed on your machine
+- Git installed on your machine
 - Groq API key (get one from [Groq](https://console.groq.com))
 
-## Local Setup
+## Setup with Docker
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/agentic-jd-generator.git
-cd agentic-jd-generator
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/agentic-jd-generator.git
+   cd agentic-jd-generator
+   ```
 
-2. Install dependencies:
-```bash
-dotnet restore
-```
+2. **Build the Docker image:**
+   ```bash
+   docker build -t agentic-jd-generator .
+   ```
 
-3. Set up your Groq API key:
-```bash
-# Initialize user secrets
-dotnet user-secrets init
+3. **Run the container:**
+   ```bash
+   # Run with API key
+   docker run -p 5000:5000 -e GROQ_API_KEY=your-api-key agentic-jd-generator
+   ```
 
-# Add your Groq API key
-dotnet user-secrets set "GroqApi:ApiKey" "your-groq-api-key"
-```
+4. **Access the application:**
+   - Swagger UI: http://localhost:5000/swagger
+   - API Root: http://localhost:5000
 
-4. Run the application:
-```bash
-dotnet run
-```
+### Environment Variables
+- `GROQ_API_KEY`: Your Groq API key (required)
+- `ASPNETCORE_ENVIRONMENT`: Set to "Development" by default
+- `ASPNETCORE_URLS`: Set to "http://+:5000" by default
 
-5. Access the application:
-- Swagger UI: http://localhost:5000/swagger
-- API Root: http://localhost:5000
+### Troubleshooting
+
+If you encounter any issues:
+
+1. **Check Docker logs:**
+   ```bash
+   docker logs <container_id>
+   ```
+
+2. **Verify the container is running:**
+   ```bash
+   docker ps
+   ```
+
+3. **Restart the container if needed:**
+   ```bash
+   docker stop <container_id>
+   docker start <container_id>
+   ```
 
 ## Configuration
 
@@ -159,23 +179,4 @@ dotnet run
   1. Create a new query and handler in the `Queries/` folder.
   2. Annotate the controller endpoint with `[ApiExplorerSettings(GroupName = "queries")]`.
   3. Use `IMediator.Send()` in the controller.
-
-## Development Notes
-
-- The application uses a multi-agent workflow:
-  1. Clarifier Agent: Asks questions for vague inputs
-  2. Generator Agent: Creates initial job description
-  3. Critique Agent: Reviews tone and formatting
-  4. Compliance Agent: Checks for bias and compliance
-  5. Rewriter Agent: Incorporates feedback
-
-## Security Notes
-
-- Never commit your API keys to source control
-- Use user secrets for local development
-- Set up proper environment variables in production
-
-## License
-
-MIT License - see LICENSE file for details
 
