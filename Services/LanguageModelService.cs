@@ -1,8 +1,8 @@
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
 using JobDescriptionAgent.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace JobDescriptionAgent.Services
 {
@@ -13,23 +13,32 @@ namespace JobDescriptionAgent.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _config;
-        private readonly Dictionary<string, (string? ApiKey, string BaseUrl, string Model)> _modelConfigs;
+        private readonly Dictionary<
+            string,
+            (string? ApiKey, string BaseUrl, string Model)
+        > _modelConfigs;
 
         public LanguageModelService(IOptions<AppSettings> options, IConfiguration config)
         {
-            _httpClient = new HttpClient();
             _config = config;
             _modelConfigs = new Dictionary<string, (string?, string, string)>();
 
             // Load Groq config
-            var groqSection = _config.GetSection("LanguageModels:Groq");
+            var groqSection = _config.GetSection("GroqApi");
+            var baseUrl = groqSection.GetValue<string>("BaseUrl");
+            var model = groqSection.GetValue<string>("Model");
+            
             _modelConfigs["llama3-8b-8192"] = (
-                groqSection.GetValue<string>("ApiKey"),
-                groqSection.GetValue<string>("BaseUrl"),
-                groqSection.GetValue<string>("Model")
+                Environment.GetEnvironmentVariable("GROQ_API_KEY"),
+                baseUrl,
+                model
             );
 
-            
+            // Configure HttpClient
+            _httpClient = new HttpClient
+            {
+                BaseAddress = new Uri(baseUrl)
+            };
         }
 
         /// <summary>
@@ -41,12 +50,12 @@ namespace JobDescriptionAgent.Services
         /// <returns>The model's response as a string.</returns>
         public async Task<string> AskAsync(string prompt, string userInput, string? modelKey = null)
         {
-            var key = modelKey ?? _config["LanguageModels:Default"] ?? "llama3-8b-8192";
+            var key = modelKey ?? "llama3-8b-8192";
             if (!_modelConfigs.TryGetValue(key, out var config))
                 throw new InvalidOperationException($"Unknown model key: {key}");
 
-            var apiKey = config.ApiKey ?? Environment.GetEnvironmentVariable("GROQ_API_KEY");
-            if (key == "llama3-8b-8192" && string.IsNullOrEmpty(apiKey))
+            var apiKey = config.ApiKey;
+            if (string.IsNullOrEmpty(apiKey))
                 throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");
 
             var requestBody = new
@@ -55,16 +64,19 @@ namespace JobDescriptionAgent.Services
                 messages = new[]
                 {
                     new { role = "system", content = prompt },
-                    new { role = "user", content = userInput }
-                }
+                    new { role = "user", content = userInput },
+                },
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, config.BaseUrl)
+            var request = new HttpRequestMessage(HttpMethod.Post, "")
             {
-                Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+                Content = new StringContent(
+                    JsonSerializer.Serialize(requestBody),
+                    Encoding.UTF8,
+                    "application/json"
+                ),
             };
-            if (key == "llama3-8b-8192")
-                request.Headers.Add("Authorization", $"Bearer {apiKey}");
+            request.Headers.Add("Authorization", $"Bearer {apiKey}");
 
             var response = await _httpClient.SendAsync(request);
 

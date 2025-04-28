@@ -3,6 +3,10 @@ using JobDescriptionAgent.Models;
 using JobDescriptionAgent.Data;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
+using DotNetEnv;
+
+// Load .env file
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 

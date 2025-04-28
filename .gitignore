@@ -90,5 +90,8 @@ secrets.json
 razor_pages_prompt
 testcases
 streamlit_ui_prompt.txt
+embeddings_backend/app_performance_log
+embeddings-query-backend/app_performance.log
 
 .env
+*.app_performance_logs.txt
