@@ -2,26 +2,31 @@ version: '3.8'
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    working_dir: /app
+    volumes:
+      - .:/app
     ports:
       - "5001:5001"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5001
+    command: dotnet watch run --urls=http://+:5001
     depends_on:
-      - query-backend
+      - embeddings-query-backend
     restart: unless-stopped
 
-  query-backend:
+  embeddings-query-backend:
     build:
-      context: ./query-backend
+      context: ./embeddings-query-backend
       dockerfile: Dockerfile
     ports:
       - "9061:9061"
     env_file:
-      - ./query-backend/.env
+      - ./embeddings-query-backend/.env
+    volumes:
+      - ./embeddings-query-backend:/app
+    command: uvicorn rag_app.api_server:app --host 0.0.0.0 --port 9061 --reload
     restart: unless-stopped
 
 

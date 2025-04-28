@@ -11,7 +11,7 @@ namespace JobDescriptionAgent.Services
     {
         private readonly ILogger<DocumentProcessor> _logger;
         private readonly HttpClient _httpClient;
-        private readonly string _embeddingApiUrl = "http://query-backend:9061/api/generate_embeddings"; // Updated for Docker Compose networking and new port
+        private readonly string _embeddingApiUrl = "http://embeddings-query-backend:9061/api/generate_embeddings"; // Updated for Docker Compose networking and new port
 
         public DocumentProcessor(ILogger<DocumentProcessor> logger, HttpClient httpClient)
         {

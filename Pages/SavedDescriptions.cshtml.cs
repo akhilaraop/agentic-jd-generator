@@ -16,7 +16,7 @@ namespace JobDescriptionAgent.Pages
         private readonly ILogger<SavedDescriptionsModel> _logger;
         private readonly IQueryProcessor _queryProcessor;
         public const int ItemsPerPage = 6;
-        private readonly string queryApiUr = "http://query-backend:9061/api/query/id"; // Updated for Docker Compose networking and new port
+        private readonly string queryApiUr = "http://embeddings-query-backend:9061/api/query/id"; // Updated for Docker Compose networking and new port
 
         public SavedDescriptionsModel(ApplicationDbContext context, ILogger<SavedDescriptionsModel> logger, IQueryProcessor queryProcessor)
         {

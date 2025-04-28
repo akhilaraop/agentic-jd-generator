@@ -145,7 +145,7 @@ A sample `.env.example` file is provided. To set up your environment:
    cd agentic-jd-generator
    ```
 2. **Set up your environment variables** (see above).
-   - For the query backend, ensure `.env` and `requirements.txt` are present in `query-backend/`.
+   - For the embeddings-query backend, ensure `.env` and `requirements.txt` are present in `embeddings-query-backend/`.
 3. **Build and run all services:**
    ```bash
    docker-compose up --build
@@ -156,19 +156,19 @@ A sample `.env.example` file is provided. To set up your environment:
 
 ### Environment Variables
 
-- `GROQ_API_KEY`: Your Groq API key (required, for query backend)
+- `GROQ_API_KEY`: Your Groq API key (required, for embeddings-query backend)
 - `ASPNETCORE_ENVIRONMENT`: Set to "Development" by default
 - `ASPNETCORE_URLS`: Set to "http://+:5001" by default
 
 ## Configuration
 
 - `appsettings.json`: Contains non-sensitive configuration
-- `query-backend/.env`: Configuration for the query backend
+- `embeddings-query-backend/.env`: Configuration for the embeddings-query backend
 
 ## API Usage
 
-- The .NET app will call the query backend at `http://query-backend:9061/api/generate_embeddings` for embedding job descriptions (Docker Compose networking).
-- See http://localhost:9061/docs for all available query backend endpoints.
+- The .NET app will call the embeddings-query backend at `http://embeddings-query-backend:9061/api/generate_embeddings` for embedding job descriptions (Docker Compose networking).
+- See http://localhost:9061/docs for all available embeddings-query backend endpoints.
 
 ---
 
@@ -182,7 +182,7 @@ You can still use the single Dockerfile approach, but Docker Compose is recommen
    cd agentic-jd-generator
    ```
 2. **Set up your environment variables** (see above).
-   - For the query backend, ensure `.env` and `requirements.txt` are present in `query-backend/`.
+   - For the embeddings-query backend, ensure `.env` and `requirements.txt` are present in `embeddings-query-backend/`.
 3. **Build the Docker image:**
    ```bash
    docker build -t agentic-jd-generator .
@@ -197,7 +197,7 @@ You can still use the single Dockerfile approach, but Docker Compose is recommen
 
 ### Environment Variables
 
-- `GROQ_API_KEY`: Your Groq API key (required, for query backend)
+- `GROQ_API_KEY`: Your Groq API key (required, for embeddings-query backend)
 - `ASPNETCORE_ENVIRONMENT`: Set to "Development" by default
 - `ASPNETCORE_URLS`: Set to "http://+:5001" by default
 

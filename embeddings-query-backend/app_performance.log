@@ -1,0 +1,59 @@
+2025-04-28 15:31:26,275 - rag_app.document_processor - INFO - Initializing DocumentProcessor with path:./job_descriptions
+2025-04-28 15:31:30,646 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-28 15:31:30,646 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-28 15:31:32,917 - huggingface_hub.file_download - WARNING - Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+2025-04-28 15:31:39,134 - rag_app.document_processor - INFO - Initializing embeddings model
+2025-04-28 15:31:39,139 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-28 15:31:39,139 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-28 15:31:40,155 - rag_app.document_processor - INFO - Loading documents...
+2025-04-28 15:31:40,688 - rag_app.document_processor - INFO - Splitting documents into chunks...
+2025-04-28 15:31:40,688 - rag_app.document_processor - INFO - Creating vector store...
+2025-04-28 15:31:40,914 - faiss.loader - INFO - Loading faiss.
+2025-04-28 15:31:40,954 - faiss.loader - INFO - Successfully loaded faiss.
+2025-04-28 15:31:40,958 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-04-28 15:31:40,960 - rag_app.document_processor - INFO - Vector store created successfully
+2025-04-28 15:31:40,960 - rag_app.rag_model - INFO - Initializing RAGModel
+2025-04-28 15:31:41,087 - rag_app.rag_model - INFO - ChatGroq model initialized with Llama3-8b-8192
+2025-04-28 15:31:41,088 - rag_app.rag_model - INFO - Prompt template created successfully
+2025-04-28 15:35:31,610 - rag_app.document_processor - INFO - Initializing DocumentProcessor with path:./job_descriptions
+2025-04-28 15:35:36,917 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-28 15:35:36,917 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-28 15:35:37,931 - huggingface_hub.file_download - WARNING - Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+2025-04-28 15:35:45,644 - rag_app.document_processor - INFO - Initializing embeddings model
+2025-04-28 15:35:45,651 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-28 15:35:45,651 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-28 15:35:46,608 - rag_app.document_processor - INFO - Loading documents...
+2025-04-28 15:35:47,095 - rag_app.document_processor - INFO - Splitting documents into chunks...
+2025-04-28 15:35:47,095 - rag_app.document_processor - INFO - Creating vector store...
+2025-04-28 15:35:47,403 - faiss.loader - INFO - Loading faiss.
+2025-04-28 15:35:47,461 - faiss.loader - INFO - Successfully loaded faiss.
+2025-04-28 15:35:47,468 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-04-28 15:35:47,477 - rag_app.document_processor - INFO - Vector store created successfully
+2025-04-28 15:35:47,478 - rag_app.rag_model - INFO - Initializing RAGModel
+2025-04-28 15:35:47,596 - rag_app.rag_model - INFO - ChatGroq model initialized with Llama3-8b-8192
+2025-04-28 15:35:47,597 - rag_app.rag_model - INFO - Prompt template created successfully
+2025-04-28 15:39:32,558 - rag_app.document_processor - INFO - Initializing DocumentProcessor with path:./job_descriptions
+2025-04-28 15:39:47,984 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-28 15:39:47,991 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-28 15:39:50,063 - huggingface_hub.file_download - WARNING - Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+2025-04-28 15:39:58,910 - rag_app.document_processor - INFO - Initializing embeddings model
+2025-04-28 15:39:58,996 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: cpu
+2025-04-28 15:39:58,996 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2025-04-28 15:40:00,631 - rag_app.document_processor - INFO - Loading documents...
+2025-04-28 15:40:07,948 - rag_app.document_processor - INFO - Splitting documents into chunks...
+2025-04-28 15:40:07,950 - rag_app.document_processor - INFO - Creating vector store...
+2025-04-28 15:40:10,649 - faiss.loader - INFO - Loading faiss.
+2025-04-28 15:40:12,061 - faiss.loader - INFO - Successfully loaded faiss.
+2025-04-28 15:40:12,161 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-04-28 15:40:12,256 - rag_app.document_processor - INFO - Vector store created successfully
+2025-04-28 15:40:12,264 - rag_app.rag_model - INFO - Initializing RAGModel
+2025-04-28 15:40:14,917 - rag_app.rag_model - INFO - ChatGroq model initialized with Llama3-8b-8192
+2025-04-28 15:40:14,966 - rag_app.rag_model - INFO - Prompt template created successfully
+2025-04-28 15:43:02,210 - rag_app.api_server - INFO - Querying for job_id=1
+2025-04-28 15:43:02,215 - rag_app.api_server - ERROR - Error querying embeddings: 404: Embeddings not found for this job_id.
+2025-04-28 15:43:11,655 - rag_app.api_server - INFO - Query (all docs) = summary
+2025-04-28 15:43:11,664 - rag_app.rag_model - INFO - Getting response for input: summary
+2025-04-28 15:43:11,665 - rag_app.rag_model - INFO - Creating retrieval chain
+2025-04-28 15:43:11,714 - rag_app.rag_model - INFO - Invoking chain with user input
+2025-04-28 15:43:14,851 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-04-28 15:43:14,885 - rag_app.rag_model - INFO - Response generated successfully

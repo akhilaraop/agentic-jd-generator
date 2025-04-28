@@ -83,7 +83,6 @@ wwwroot/lib/**/
 !wwwroot/lib/README.md
 
 # Development settings
-appsettings.Development.json
 *.Development.json
 secrets.json
 

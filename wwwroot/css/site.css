@@ -424,4 +424,16 @@ body {
     width: 100%;
     white-space: nowrap;
     line-height: 60px;
+}
+
+.chat-history div {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+}
+.chat-history .text-end, .chat-history .text-start {
+    text-align: left !important;
+}
+.chat-history .badge {
+    min-width: 3.5rem;
+    display: inline-block;
 } 

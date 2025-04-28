@@ -15,7 +15,7 @@ namespace JobDescriptionAgent.Services
     {
         private readonly ILogger<QueryProcessor> _logger;
         private readonly HttpClient _httpClient;
-        private readonly string _queryApiUrl = "http://query-backend:9061/api/query/id";
+        private readonly string _queryApiUrl = "http://embeddings-query-backend:9061/api/query/id";
 
         public QueryProcessor(ILogger<QueryProcessor> logger, HttpClient httpClient)
         {
