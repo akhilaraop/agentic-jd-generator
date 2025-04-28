@@ -88,7 +88,7 @@ flowchart TD
 
 ---
 
-## 📚 Components
+## Components
 
 ### Job Descriptions Experts Portal
 - **Generate Job Description:** Start new JD creation
@@ -117,7 +117,7 @@ flowchart TD
 - **Query Handler:** Processes user queries and retrieves matches
 
 ### External Systems
-- **LLM Embeddings Generator:** Generates vector embeddings (using LLM APIs like OpenAI, Huggingface)
+- **LLM Embeddings Generator:** Generates vector embeddings 
 
 ---
 
