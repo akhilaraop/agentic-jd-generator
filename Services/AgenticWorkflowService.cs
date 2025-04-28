@@ -241,10 +241,7 @@ namespace JobDescriptionAgent.Services
             }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("model \"llama3\" not found"))
-                {
-                    throw new Exception("The model 'llama3' was not found on the backend. If you are using Ollama, run: ollama pull llama3");
-                }
+               
                 _logger.LogError(ex, "Error in JD generation workflow");
                 throw;
             }
@@ -293,10 +290,7 @@ namespace JobDescriptionAgent.Services
             }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("model \"llama3\" not found"))
-                {
-                    throw new Exception("The model 'llama3' was not found on the backend. If you are using Ollama, run: ollama pull llama3");
-                }
+                
                  _logger.LogError(ex, "Error in JD generation workflow");
                 throw;
             }

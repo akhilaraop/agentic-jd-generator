@@ -12,7 +12,6 @@ services:
       - ASPNETCORE_URLS=http://+:5001
     depends_on:
       - query-backend
-      - ollama
     restart: unless-stopped
 
   query-backend:
@@ -25,13 +24,4 @@ services:
       - ./query-backend/.env
     restart: unless-stopped
 
-  ollama:
-    image: ollama/ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    command: serve
 
-volumes:
-  ollama_data:

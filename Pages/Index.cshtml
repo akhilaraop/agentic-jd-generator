@@ -38,7 +38,7 @@
                                     <label for="modelSelect" class="form-label">Choose Language Model</label>
                                     <select id="modelSelect" name="SelectedModel" class="form-select">
                                         <option value="llama3-8b-8192" selected>Groq (llama3-8b-8192)</option>
-                                        <option value="ollama-llama3">Ollama (llama3 local)</option>
+                
                                     </select>
                                 </div>
                                 <div class="text-center">
@@ -190,8 +190,7 @@
             btn.disabled = true;
             btn.value = 'Generating...';
         });
-        // Ollama model warning
-        // (Removed special logic for ollama-llama3 as requested)
+        
         function copyToClipboard(text) {
             if (!text) {
                 const description = document.querySelector('pre').textContent;

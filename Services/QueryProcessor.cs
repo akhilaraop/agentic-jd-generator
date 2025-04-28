@@ -37,11 +37,7 @@ namespace JobDescriptionAgent.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError($"QueryProcessor API failed: {response.StatusCode} - {content}");
-                    // Custom handling for Ollama model not found error
-                    if (content.Contains("model \"llama3\" not found"))
-                    {
-                        throw new Exception("The model 'llama3' was not found on the backend. If you are using Ollama, run: ollama pull llama3");
-                    }
+                    
                     throw new Exception($"Query API error: {content}");
                 }
                 return content;

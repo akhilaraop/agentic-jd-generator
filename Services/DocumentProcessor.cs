@@ -32,10 +32,7 @@ namespace JobDescriptionAgent.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    if (error.Contains("model \"llama3\" not found"))
-                    {
-                        throw new Exception("The model 'llama3' was not found on the backend. If you are using Ollama, run: ollama pull llama3");
-                    }
+                    
                     _logger.LogError($"DocumentProcessor embedding API failed: {response.StatusCode} - {error}");
                 }
                 else

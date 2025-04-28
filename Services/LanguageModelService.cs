@@ -29,13 +29,7 @@ namespace JobDescriptionAgent.Services
                 groqSection.GetValue<string>("Model")
             );
 
-            // Load Ollama config
-            var ollamaSection = _config.GetSection("LanguageModels:Ollama");
-            _modelConfigs["ollama-llama3"] = (
-                null,
-                ollamaSection.GetValue<string>("BaseUrl"),
-                ollamaSection.GetValue<string>("Model")
-            );
+            
         }
 
         /// <summary>
@@ -43,7 +37,7 @@ namespace JobDescriptionAgent.Services
         /// </summary>
         /// <param name="prompt">The system prompt or instructions for the model.</param>
         /// <param name="userInput">The user's input or question.</param>
-        /// <param name="modelKey">The model key to use ("llama3-8b-8192" or "ollama-llama3").</param>
+        /// <param name="modelKey">The model key to use ("llama3-8b-8192").</param>
         /// <returns>The model's response as a string.</returns>
         public async Task<string> AskAsync(string prompt, string userInput, string? modelKey = null)
         {
