@@ -13,7 +13,7 @@ config:
   look: neo
 ---
 flowchart TD
-    subgraph MainApp["Main Application"]
+    subgraph MainApp["AI Job Description Manager"]
         A1["Generate Job Description"]
         A2["Store Job Description"]
         A3["Read Job Description"]
@@ -90,7 +90,7 @@ flowchart TD
     style API fill:#bbf,stroke:#333,stroke-width:1px
     style Agents fill:#bfb,stroke:#333,stroke-width:1px
     style DataStore fill:#fdd,stroke:#333,stroke-width:1px
-    style EmbeddingsBackend fill:#ffd,stroke:#333,stroke-width:1px 
+    style EmbeddingsBackend fill:#ffd,stroke:#333,stroke-width:1px  
 
 ---
 
