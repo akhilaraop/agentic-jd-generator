@@ -1,8 +1,8 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 using JobDescriptionAgent.Models;
-
 
 namespace JobDescriptionAgent.Services
 {
@@ -12,16 +12,30 @@ namespace JobDescriptionAgent.Services
     public class LanguageModelService
     {
         private readonly HttpClient _httpClient;
-        private readonly GroqApiSettings _apiSettings;
+        private readonly IConfiguration _config;
+        private readonly Dictionary<string, (string? ApiKey, string BaseUrl, string Model)> _modelConfigs;
 
-        public LanguageModelService(IOptions<AppSettings> options)
+        public LanguageModelService(IOptions<AppSettings> options, IConfiguration config)
         {
             _httpClient = new HttpClient();
-            _apiSettings = options.Value.GroqApi ?? throw new InvalidOperationException("GroqApi settings are missing in configuration.");
-            _apiSettings.ApiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY") ?? _apiSettings.ApiKey;
-            
-            if (string.IsNullOrEmpty(_apiSettings.ApiKey))
-                throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");
+            _config = config;
+            _modelConfigs = new Dictionary<string, (string?, string, string)>();
+
+            // Load Groq config
+            var groqSection = _config.GetSection("LanguageModels:Groq");
+            _modelConfigs["llama3-8b-8192"] = (
+                groqSection.GetValue<string>("ApiKey"),
+                groqSection.GetValue<string>("BaseUrl"),
+                groqSection.GetValue<string>("Model")
+            );
+
+            // Load Ollama config
+            var ollamaSection = _config.GetSection("LanguageModels:Ollama");
+            _modelConfigs["ollama-llama3"] = (
+                null,
+                ollamaSection.GetValue<string>("BaseUrl"),
+                ollamaSection.GetValue<string>("Model")
+            );
         }
 
         /// <summary>
@@ -29,23 +43,34 @@ namespace JobDescriptionAgent.Services
         /// </summary>
         /// <param name="prompt">The system prompt or instructions for the model.</param>
         /// <param name="userInput">The user's input or question.</param>
-        /// <param name="modelOverride">Optional model override (defaults to configured model).</param>
+        /// <param name="modelKey">The model key to use ("llama3-8b-8192" or "ollama-llama3").</param>
         /// <returns>The model's response as a string.</returns>
-        public async Task<string> AskAsync(string prompt, string userInput, string? modelOverride = null)
+        public async Task<string> AskAsync(string prompt, string userInput, string? modelKey = null)
         {
-            var fullPrompt = $"{prompt}\nUser input: {userInput}";
+            var key = modelKey ?? _config["LanguageModels:Default"] ?? "llama3-8b-8192";
+            if (!_modelConfigs.TryGetValue(key, out var config))
+                throw new InvalidOperationException($"Unknown model key: {key}");
+
+            var apiKey = config.ApiKey ?? Environment.GetEnvironmentVariable("GROQ_API_KEY");
+            if (key == "llama3-8b-8192" && string.IsNullOrEmpty(apiKey))
+                throw new InvalidOperationException("GROQ_API_KEY is missing in configuration.");
 
             var requestBody = new
             {
-                model = modelOverride ?? _apiSettings.Model,
-                messages = new[] { new { role = "user", content = fullPrompt } },
+                model = config.Model,
+                messages = new[]
+                {
+                    new { role = "system", content = prompt },
+                    new { role = "user", content = userInput }
+                }
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, _apiSettings.BaseUrl)
+            var request = new HttpRequestMessage(HttpMethod.Post, config.BaseUrl)
             {
-                Headers = { { "Authorization", $"Bearer {_apiSettings.ApiKey}" } },
                 Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
             };
+            if (key == "llama3-8b-8192")
+                request.Headers.Add("Authorization", $"Bearer {apiKey}");
 
             var response = await _httpClient.SendAsync(request);
 

@@ -137,7 +137,7 @@ A sample `.env.example` file is provided. To set up your environment:
 
   **Note:** Never share your API key publicly or commit it to version control.
 
-## Setup with Docker
+## Setup with Docker Compose (Recommended)
 
 1. **Clone the repository:**
    ```bash
@@ -145,41 +145,61 @@ A sample `.env.example` file is provided. To set up your environment:
    cd agentic-jd-generator
    ```
 2. **Set up your environment variables** (see above).
-3. **Build the Docker image:**
+   - For the query backend, ensure `.env` and `requirements.txt` are present in `query-backend/`.
+3. **Build and run all services:**
    ```bash
-   docker build -t agentic-jd-generator .
-   ```
-4. **Run the container:**
-   ```bash
-   
    docker-compose up --build
    ```
-5. **Access the application:**
-   - Swagger UI: http://localhost:5001/swagger
-   - UI: http://localhost:5001
+4. **Access the application:**
+   - .NET Web UI: http://localhost:5001
+   - Query Backend API/Swagger: http://localhost:9061/docs
 
 ### Environment Variables
 
-- `GROQ_API_KEY`: Your Groq API key (required)
+- `GROQ_API_KEY`: Your Groq API key (required, for query backend)
 - `ASPNETCORE_ENVIRONMENT`: Set to "Development" by default
 - `ASPNETCORE_URLS`: Set to "http://+:5001" by default
 
 ## Configuration
 
 - `appsettings.json`: Contains non-sensitive configuration
+- `query-backend/.env`: Configuration for the query backend
 
 ## API Usage
 
-1. Open Swagger UI at [http://localhost:5001/swagger](http://localhost:5001/swagger)
-2. Use the `/api/jd` endpoint for job description generation (POST, Command)
-3. Use the `/api/saved-descriptions` endpoints for retrieving saved job descriptions (GET, Query)
-4. Send a POST request with the following body:
+- The .NET app will call the query backend at `http://query-backend:9061/api/generate_embeddings` for embedding job descriptions (Docker Compose networking).
+- See http://localhost:9061/docs for all available query backend endpoints.
 
-```json
-{
-  "initialInput": "Your job description requirements"
-}
-```
+---
+
+## Legacy: Single Dockerfile (All-in-one)
+
+You can still use the single Dockerfile approach, but Docker Compose is recommended for development and production.
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/agentic-jd-generator.git
+   cd agentic-jd-generator
+   ```
+2. **Set up your environment variables** (see above).
+   - For the query backend, ensure `.env` and `requirements.txt` are present in `query-backend/`.
+3. **Build the Docker image:**
+   ```bash
+   docker build -t agentic-jd-generator .
+   ```
+4. **Run the container:**
+   ```bash
+   docker run -p 5001:5001 -p 9061:9061 agentic-jd-generator
+   ```
+5. **Access the application:**
+   - .NET Web UI: http://localhost:5001
+   - Query Backend API/Swagger: http://localhost:9061/docs
+
+### Environment Variables
+
+- `GROQ_API_KEY`: Your Groq API key (required, for query backend)
+- `ASPNETCORE_ENVIRONMENT`: Set to "Development" by default
+- `ASPNETCORE_URLS`: Set to "http://+:5001" by default
 
 ## Extending the System
 

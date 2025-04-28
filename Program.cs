@@ -18,8 +18,11 @@ builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddControllers();
 
 // Register services
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddSingleton<LanguageModelService>();
 builder.Services.AddScoped<IAgentPromptService, AgentPromptService>();
+builder.Services.AddHttpClient<IDocumentProcessor, DocumentProcessor>();
+builder.Services.AddHttpClient<IQueryProcessor, QueryProcessor>();
 
 // Register agents
 builder.Services.AddScoped<ClarifierAgent>();

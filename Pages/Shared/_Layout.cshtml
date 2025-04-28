@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
+@* Removed navbar for a cleaner look as requested. *@
 <body>
-    <header>
+    @*<header>
         <nav class="navbar navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
@@ -21,7 +22,7 @@
                 </div>
             </div>
         </nav>
-    </header>
+    </header>*@
 
     <div class="container">
         <main role="main" class="pb-3">
@@ -37,4 +38,4 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-</html> 
+</html>

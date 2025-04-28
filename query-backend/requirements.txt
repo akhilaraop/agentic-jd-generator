@@ -1,0 +1,13 @@
+# Backend requirements for Job Description API
+fastapi
+uvicorn
+python-dotenv
+langchain
+langchain-community
+langchain-huggingface
+langchain-groq
+faiss-cpu
+pydantic
+PyYAML
+pypdf
+# Add any other dependencies from the main requirements.txt as needed

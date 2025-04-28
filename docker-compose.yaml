@@ -1,13 +1,37 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  agentic-jd-generator:
-    build: .
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5001:5001"
     environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
       - ASPNETCORE_ENVIRONMENT=Development
-    env_file:
-      - .env
+      - ASPNETCORE_URLS=http://+:5001
+    depends_on:
+      - query-backend
+      - ollama
     restart: unless-stopped
+
+  query-backend:
+    build:
+      context: ./query-backend
+      dockerfile: Dockerfile
+    ports:
+      - "9061:9061"
+    env_file:
+      - ./query-backend/.env
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    command: serve
+
+volumes:
+  ollama_data:

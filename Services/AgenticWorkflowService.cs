@@ -16,6 +16,7 @@ namespace JobDescriptionAgent.Services
         string Role { get; }
         string Goal { get; }
         Task<string> ExecuteAsync(string input);
+        Task<string> ExecuteAsync(string input, string modelKey);
     }
 
     public abstract class AgentBase : IAgent
@@ -46,6 +47,13 @@ namespace JobDescriptionAgent.Services
             var agentConfig = _promptService.GetAgentPrompt(_agentType);
             var prompt = $"{agentConfig.Description}\n\nTask:\n{string.Join("\n", agentConfig.Task)}\n\nConstraints:\n{string.Join("\n", agentConfig.Constraints ?? new List<string>())}";
             return await _LanguageModelService.AskAsync(prompt, input, _model);
+        }
+
+        public virtual async Task<string> ExecuteAsync(string input, string modelKey)
+        {
+            var agentConfig = _promptService.GetAgentPrompt(_agentType);
+            var prompt = $"{agentConfig.Description}\n\nTask:\n{string.Join("\n", agentConfig.Task)}\n\nConstraints:\n{string.Join("\n", agentConfig.Constraints ?? new List<string>())}";
+            return await _LanguageModelService.AskAsync(prompt, input, modelKey);
         }
     }
 
@@ -131,6 +139,13 @@ namespace JobDescriptionAgent.Services
             var agentConfig = _promptService.GetAgentPrompt(_agentType);
             var prompt = $"{agentConfig.Description}\n\nTask:\n{string.Join("\n", agentConfig.Task)}\n\nStyle Guidelines:\n{string.Join("\n", agentConfig.StyleGuidelines?.Guidelines ?? new List<string>())}\n\nConstraints:\n{string.Join("\n", agentConfig.Constraints ?? new List<string>())}";
             return await _LanguageModelService.AskAsync(prompt, input, _model);
+        }
+
+        public override async Task<string> ExecuteAsync(string input, string modelKey)
+        {
+            var agentConfig = _promptService.GetAgentPrompt(_agentType);
+            var prompt = $"{agentConfig.Description}\n\nTask:\n{string.Join("\n", agentConfig.Task)}\n\nStyle Guidelines:\n{string.Join("\n", agentConfig.StyleGuidelines?.Guidelines ?? new List<string>())}\n\nConstraints:\n{string.Join("\n", agentConfig.Constraints ?? new List<string>())}";
+            return await _LanguageModelService.AskAsync(prompt, input, modelKey);
         }
     }
 
@@ -226,7 +241,63 @@ namespace JobDescriptionAgent.Services
             }
             catch (Exception ex)
             {
+                if (ex.Message.Contains("model \"llama3\" not found"))
+                {
+                    throw new Exception("The model 'llama3' was not found on the backend. If you are using Ollama, run: ollama pull llama3");
+                }
                 _logger.LogError(ex, "Error in JD generation workflow");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Runs the full job description generation workflow.
+        /// </summary>
+        /// <param name="input">The initial job description requirements provided by the user.</param>
+        /// <param name="modelKey">The model key to use for the workflow.</param>
+        /// <returns>A tuple containing the final job description and a dictionary of all workflow stages.</returns>
+        public async Task<(string description, Dictionary<string, string> stages)> RunAsync(string input, string modelKey)
+        {
+            try
+            {
+                var stages = new Dictionary<string, string>();
+
+                // Step 1: Clarification
+                var clarificationResponse = await _clarifier.ExecuteAsync(input, modelKey);
+                stages["clarity"] = clarificationResponse;
+
+                // Step 2: JD Generation
+                var generatedJD = await _generator.ExecuteAsync(clarificationResponse, modelKey);
+                stages["initial"] = generatedJD;
+
+                // Step 3: Critique
+                var critique = await _critique.ExecuteAsync(generatedJD, modelKey);
+                stages["critique"] = critique;
+
+                // Step 4: Compliance
+                var complianceCheck = await _compliance.ExecuteAsync(generatedJD, modelKey);
+                stages["compliance"] = complianceCheck;
+
+                // Step 5: Rewrite
+                var rewrittenJD = await _rewriter.ExecuteAsync(
+                    $"Original JD:\n{generatedJD}\n\nCritique:\n{critique}\n\nCompliance Notes:\n{complianceCheck}",
+                    modelKey
+                );
+                stages["rewrite"] = rewrittenJD;
+
+                // Step 6: Final polish
+                var finalJD = await _finalizer.ExecuteAsync(rewrittenJD, modelKey);
+                stages["final"] = finalJD;
+
+                return (finalJD, stages);
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("model \"llama3\" not found"))
+                {
+                    throw new Exception("The model 'llama3' was not found on the backend. If you are using Ollama, run: ollama pull llama3");
+                }
+                 _logger.LogError(ex, "Error in JD generation workflow");
                 throw;
             }
         }

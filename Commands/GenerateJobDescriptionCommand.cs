@@ -14,6 +14,7 @@ namespace JobDescriptionAgent.Commands
     public class GenerateJobDescriptionCommand : IRequest<JDResponse>
     {
         public string InitialInput { get; set; } = string.Empty;
+        public string ModelKey { get; set; } = "llama3-8b-8192";
     }
 
     /// <summary>
@@ -34,7 +35,7 @@ namespace JobDescriptionAgent.Commands
         /// <returns>A <see cref="JDResponse"/> with the generated job description.</returns>
         public async Task<JDResponse> Handle(GenerateJobDescriptionCommand request, CancellationToken cancellationToken)
         {
-            var (description, stages) = await _workflowService.RunAsync(request.InitialInput);
+            var (description, stages) = await _workflowService.RunAsync(request.InitialInput, request.ModelKey);
             return new JDResponse
             {
                 FinalJobDescription = description,

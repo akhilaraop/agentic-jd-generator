@@ -1,212 +1,203 @@
 @page
-@model JobDescriptionAgent.Pages.IndexModel
+@model JobDescriptionAgent.Pages.MainModel
 @{
-    ViewData["Title"] = "AI Job Description Generator";
+    ViewData["Title"] = "AI JD Generator";
 }
 
 <div class="container mt-4">
-    <div class="text-center mb-5">
-        <h1 class="display-4">AI Job Description Generator</h1>
-        <p class="lead mb-4">Create professional job descriptions with AI assistance. Our advanced AI will help you craft clear, inclusive, and effective job descriptions.</p>
+    <div class="alert alert-primary text-center mb-4" style="font-size:1.5rem; font-weight:700; letter-spacing:1px;">
+        AI Job Description Manager
     </div>
-
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="d-flex justify-content-end mb-3">
-                <a asp-page="/SavedDescriptions" class="btn btn-link text-decoration-none">
-                    <i class="fas fa-folder-open me-2"></i>View Saved Descriptions
-                </a>
+    <ul class="nav nav-tabs" id="mainTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Home</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="saved-tab" data-bs-toggle="tab" data-bs-target="#saved" type="button" role="tab" aria-controls="saved" aria-selected="false">Saved Descriptions</button>
+        </li>
+    </ul>
+    <div class="tab-content mt-4" id="mainTabContent">
+        <!-- Home Tab -->
+        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            @* --- Begin Index.cshtml content --- *@
+            <div class="text-center mb-5">
+                <h1 class="display-4">AI Job Description Generator</h1>
+                <p class="lead mb-4">Create professional job descriptions with AI assistance. Our advanced AI will help you craft clear, inclusive, and effective job descriptions.</p>
             </div>
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <form method="post" id="jdForm">
-                        <div class="mb-4">
-                            <label asp-for="JobDescription" class="form-label">Job Requirements</label>
-                            <textarea asp-for="JobDescription" class="form-control" rows="5"
-                                placeholder="Example: Need a senior backend developer with expertise in .NET Core and microservices..."
-                                data-val="true"
-                                data-val-required="Please provide job requirements."></textarea>
-                            <span asp-validation-for="JobDescription" class="text-danger"></span>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <form method="post" id="jdForm">
+                                <div class="mb-4">
+                                    <label asp-for="JobDescription" class="form-label">Job Requirements</label>
+                                    <textarea asp-for="JobDescription" class="form-control" rows="5" placeholder="Example: Need a senior backend developer with expertise in .NET Core and microservices..." data-val="true" data-val-required="Please provide job requirements."></textarea>
+                                    <span asp-validation-for="JobDescription" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="modelSelect" class="form-label">Choose Language Model</label>
+                                    <select id="modelSelect" name="SelectedModel" class="form-select">
+                                        <option value="llama3-8b-8192" selected>Groq (llama3-8b-8192)</option>
+                                        <option value="ollama-llama3">Ollama (llama3 local)</option>
+                                    </select>
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg px-5" id="generateBtn">Generate Description</button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary btn-lg px-5" id="generateBtn">
-                                Generate Description
-                            </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger fade-in" role="alert">@Model.ErrorMessage</div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.GeneratedDescription))
+                    {
+                        <div class="card shadow-sm fade-in">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Generated Job Description</h5>
+                                <div>
+                                    <button class="btn btn-outline-primary btn-sm me-2" onclick="copyToClipboard()"><i class="fas fa-copy me-2"></i>Copy</button>
+                                    <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#saveModal"><i class="fas fa-save me-2"></i>Save</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <pre class="mb-0">@Model.GeneratedDescription</pre>
+                            </div>
                         </div>
-                    </form>
+                        @if (Model.Stages != null && Model.Stages.Any())
+                        {
+                            <div class="accordion fade-in mt-4" id="stagesAccordion">
+                                @foreach (var stage in Model.Stages)
+                                {
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@stage.Key-Collapse">@stage.Key</button>
+                                        </h2>
+                                        <div id="@stage.Key-Collapse" class="accordion-collapse collapse" data-bs-parent="#stagesAccordion">
+                                            <div class="accordion-body">
+                                                <pre>@stage.Value</pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
                 </div>
             </div>
-
-            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-            {
-                <div class="alert alert-danger fade-in" role="alert">
-                    @Model.ErrorMessage
-                </div>
-            }
-
-            @if (!string.IsNullOrEmpty(Model.GeneratedDescription))
-            {
-                <div class="card shadow-sm fade-in">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Generated Job Description</h5>
-                        <div>
-                            <button class="btn btn-outline-primary btn-sm me-2" onclick="copyToClipboard()">
-                                <i class="fas fa-copy me-2"></i>Copy
-                            </button>
-                            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#saveModal">
-                                <i class="fas fa-save me-2"></i>Save
-                            </button>
+            <!-- Removed navigation links between Home and Saved Descriptions as both are now tabs. -->
+            <!-- Save Modal -->
+            <div class="modal fade" id="saveModal" tabindex="-1" aria-labelledby="saveModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="saveModalLabel">Save Job Description</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <pre class="mb-0">@Model.GeneratedDescription</pre>
+                        <form method="post" asp-page-handler="Save">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                                <input type="hidden" name="description" value="@Model.GeneratedDescription">
+                                <input type="hidden" name="initialInput" value="@Model.JobDescription">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-
-                @if (Model.Stages != null && Model.Stages.Any())
-                {
-                    <div class="accordion fade-in mt-4" id="stagesAccordion">
-                        @if (Model.Stages.ContainsKey("clarity"))
+            </div>
+        </div>
+        <!-- Saved Descriptions Tab -->
+        <div class="tab-pane fade" id="saved" role="tabpanel" aria-labelledby="saved-tab">
+            @* --- Begin SavedDescriptions.cshtml content --- *@
+            <div class="mb-3">
+                <label for="jobSelect" class="form-label">Select Job Description:</label>
+                <select class="form-select" id="jobSelect" onchange="onJobSelect()">
+                    @if (Model.SavedDescriptions.Any())
+                    {
+                        foreach (var jd in Model.SavedDescriptions)
                         {
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#clarityCollapse">
-                                        Clarification Stage
-                                    </button>
-                                </h2>
-                                <div id="clarityCollapse" class="accordion-collapse collapse show" data-bs-parent="#stagesAccordion">
-                                    <div class="accordion-body">
-                                        <pre>@Model.Stages["clarity"]</pre>
-                                    </div>
-                                </div>
-                            </div>
+                            <option value="@jd.Id">@jd.Title</option>
                         }
-
-                        @if (Model.Stages.ContainsKey("initial"))
+                    }
+                    <option value="ALL">Query JD templates</option>
+                </select>
+            </div>
+            <div id="jobDescriptionChatContainer" class="row">
+                <div class="col-md-7">
+                    <div id="jobDescriptionContainer">
+                        @if (Model.SavedDescriptions.Any())
                         {
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#initialCollapse">
-                                        Initial Draft
-                                    </button>
-                                </h2>
-                                <div id="initialCollapse" class="accordion-collapse collapse" data-bs-parent="#stagesAccordion">
-                                    <div class="accordion-body">
-                                        <pre>@Model.Stages["initial"]</pre>
+                            foreach (var jd in Model.SavedDescriptions)
+                            {
+                                <div class="job-description-card" id="job-@jd.Id" style="display:none;">
+                                    <div class="card h-100 shadow-sm mb-4">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">@jd.Title</h5>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                @jd.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                                            </small>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text text-muted mb-3">Initial Input:</p>
+                                            <p class="card-text">@jd.InitialInput</p>
+                                            <hr />
+                                            <p class="card-text text-muted mb-3">Generated Description:</p>
+                                            <p class="card-text">@jd.Description</p>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <button class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('@jd.Description')"><i class="fas fa-copy me-2"></i>Copy</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            }
                         }
-
-                        @if (Model.Stages.ContainsKey("critique"))
+                        else
                         {
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#critiqueCollapse">
-                                        Critique Feedback
-                                    </button>
-                                </h2>
-                                <div id="critiqueCollapse" class="accordion-collapse collapse" data-bs-parent="#stagesAccordion">
-                                    <div class="accordion-body">
-                                        <pre>@Model.Stages["critique"]</pre>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-                        @if (Model.Stages.ContainsKey("compliance"))
-                        {
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#complianceCollapse">
-                                        Compliance Review
-                                    </button>
-                                </h2>
-                                <div id="complianceCollapse" class="accordion-collapse collapse" data-bs-parent="#stagesAccordion">
-                                    <div class="accordion-body">
-                                        <pre>@Model.Stages["compliance"]</pre>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-                        @if (Model.Stages.ContainsKey("rewrite"))
-                        {
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#rewriteCollapse">
-                                        Rewritten Version
-                                    </button>
-                                </h2>
-                                <div id="rewriteCollapse" class="accordion-collapse collapse" data-bs-parent="#stagesAccordion">
-                                    <div class="accordion-body">
-                                        <pre>@Model.Stages["rewrite"]</pre>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-                        @if (Model.Stages.ContainsKey("final"))
-                        {
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#finalCollapse">
-                                        Final Polish
-                                    </button>
-                                </h2>
-                                <div id="finalCollapse" class="accordion-collapse collapse" data-bs-parent="#stagesAccordion">
-                                    <div class="accordion-body">
-                                        <pre>@Model.Stages["final"]</pre>
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="alert alert-info" role="alert">No saved job descriptions found. You can still use the chat to query the default JD template.</div>
                         }
                     </div>
-                }
-            }
+                </div>
+                <div class="col-md-5">
+                    <div class="chat-window mt-4">
+                        <h6>Ask about this Job Description:</h6>
+                        <div id="chat-history" class="chat-history border rounded p-2 mb-2" style="height:300px; overflow-y:auto;"></div>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="chat-input" placeholder="Type your question..." onkeydown="if(event.key==='Enter'){ sendChat(); }">
+                            <button class="btn btn-primary" type="button" onclick="sendChat()">Send</button>
+                        </div>
+                        <div class="form-text mt-2">Select "Query JD templates" to query across all job descriptions or use the chat for the default template.</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-<!-- Save Modal -->
-<div class="modal fade" id="saveModal" tabindex="-1" aria-labelledby="saveModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="saveModalLabel">Save Job Description</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" asp-page-handler="Save">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
-                    </div>
-                    <input type="hidden" name="description" value="@Model.GeneratedDescription">
-                    <input type="hidden" name="initialInput" value="@Model.JobDescription">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.getElementById('jdForm').addEventListener('submit', function(e) {
-            console.log('Form submitted');
+        document.getElementById('jdForm')?.addEventListener('submit', function(e) {
             const btn = document.getElementById('generateBtn');
             btn.disabled = true;
             btn.value = 'Generating...';
         });
-
-        function copyToClipboard() {
-            const description = document.querySelector('pre').textContent;
-            navigator.clipboard.writeText(description)
+        // Ollama model warning
+        // (Removed special logic for ollama-llama3 as requested)
+        function copyToClipboard(text) {
+            if (!text) {
+                const description = document.querySelector('pre').textContent;
+                text = description;
+            }
+            navigator.clipboard.writeText(text)
                 .then(() => {
                     const toast = document.createElement('div');
                     toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3';
@@ -224,12 +215,69 @@
                     document.body.appendChild(toast);
                     const bsToast = new bootstrap.Toast(toast);
                     bsToast.show();
-
                     toast.addEventListener('hidden.bs.toast', function () {
                         document.body.removeChild(toast);
                     });
                 })
                 .catch(err => console.error('Failed to copy text: ', err));
+        }
+        // Saved Descriptions tab JS
+        function onJobSelect() {
+            var select = document.getElementById('jobSelect');
+            var selectedId = select.value;
+            var cards = document.querySelectorAll('.job-description-card');
+            cards.forEach(card => card.style.display = 'none');
+            var selectedCard = document.getElementById('job-' + selectedId);
+            if (selectedCard) selectedCard.style.display = 'block';
+            // Clear chat history when switching jobs
+            document.getElementById('chat-history').innerHTML = '';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            onJobSelect(); // Show first by default
+        });
+        function sendChat() {
+            var select = document.getElementById('jobSelect');
+            var jobId = select.value;
+            var input = document.getElementById('chat-input');
+            var historyDiv = document.getElementById('chat-history');
+            var query = input.value.trim();
+            if (!query) return;
+            var userMsg = document.createElement('div');
+            userMsg.className = 'mb-1 text-end';
+            userMsg.innerHTML = '<span class="badge bg-primary">You:</span> ' + query;
+            historyDiv.appendChild(userMsg);
+            input.value = '';
+            var fetchUrl = '';
+            if (jobId === 'ALL') {
+                fetchUrl = `/api/queryproxy?job_id=${encodeURIComponent(0)}&query=${encodeURIComponent(query)}`;
+            } else {
+                fetchUrl = `/api/queryproxy?job_id=${encodeURIComponent(jobId)}&query=${encodeURIComponent(query)}`;
+            }
+            fetch(fetchUrl, { method: 'POST' })
+            .then(async res => {
+                if (!res.ok) {
+                    let errorText = await res.text();
+                    throw new Error(errorText || 'Server error');
+                }
+                const text = await res.text();
+                if (!text) {
+                    throw new Error('Empty response from server');
+                }
+                return JSON.parse(text);
+            })
+            .then(data => {
+                var botMsg = document.createElement('div');
+                botMsg.className = 'mb-1 text-start';
+                botMsg.innerHTML = '<span class="badge bg-secondary">Bot:</span> ' + (data.answer || 'No answer');
+                historyDiv.appendChild(botMsg);
+                historyDiv.scrollTop = historyDiv.scrollHeight;
+            })
+            .catch(err => {
+                var errMsg = document.createElement('div');
+                errMsg.className = 'mb-1 text-danger';
+                errMsg.innerHTML = '<span class="badge bg-danger">Error:</span> ' + err.message;
+                historyDiv.appendChild(errMsg);
+            });
         }
     </script>
 } 
