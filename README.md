@@ -121,7 +121,7 @@ flowchart TD
 
 ---
 
-## 🚀 Features
+## Features
 
 - Multi-agent job description generation pipeline
 - Embeddings-based semantic search
@@ -132,7 +132,7 @@ flowchart TD
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - .NET 8 / ASP.NET Core Web API
 - SQLite
@@ -142,43 +142,5 @@ flowchart TD
 
 ---
 
-## 🏁 Quick Start
 
-1. **Clone**
-
-```bash
-git clone https://github.com/akhilaraop/agentic-jd-generator.git
-cd agentic-jd-generator
-```
-
-2. **Set environment variables**
-
-- Add `.env` file or configure API keys for embeddings generation
-
-3. **Run**
-
-```bash
-dotnet build
-dotnet run
-```
-
-4. **Access APIs**
-
-Visit: [http://localhost:5000/swagger](http://localhost:5000/swagger)
-
----
-
-## 📈 Roadmap
-
-- 🔐 Secure authentication (OAuth2)
-- 📊 Dashboard to visualize JD usage and analytics
-- 🏛️ Organization-specific JD compliance templates
-- 🌐 Multi-language JD generation
-- 🧠 Fine-tuning agent prompts for industry-specific jobs
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
 
